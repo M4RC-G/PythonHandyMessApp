@@ -33,7 +33,7 @@ version = 1.0
 
 # (list) Application requirements
 #for android device-> requirements=plyer,kivy,android
-requirements = plyer,kivy,pyjnius,android
+requirements = plyer,kivy,pyjnius,android,datetime
 
 # (str) Presplash of the application
 #presplash.filename = %(source.dir)s/data/presplash.png

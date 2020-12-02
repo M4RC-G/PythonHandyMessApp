@@ -1,3 +1,9 @@
+'''
+Android Gyroscope
+-----------------
+'''
+
+from plyer.facades import Gyroscope
 from jnius import PythonJavaClass, java_method, autoclass, cast
 from plyer.platforms.android import activity
 
@@ -5,7 +11,8 @@ Context = autoclass('android.content.Context')
 Sensor = autoclass('android.hardware.Sensor')
 SensorManager = autoclass('android.hardware.SensorManager')
 
-class LinearAcceleration(PythonJavaClass):
+
+class GyroscopeSensorListener(PythonJavaClass):
     __javainterfaces__ = ['android/hardware/SensorEventListener']
 
     def __init__(self):
@@ -15,15 +22,16 @@ class LinearAcceleration(PythonJavaClass):
             activity.getSystemService(Context.SENSOR_SERVICE)
         )
         self.sensor = self.SensorManager.getDefaultSensor(
-            Sensor.TYPE_LINEAR_ACCELERATION
+            Sensor.TYPE_GYROSCOPE
         )
 
         self.values = [None, None, None]
 
     def enable(self):
         self.SensorManager.registerListener(
-        self, self.sensor,
-        SensorManager.SENSOR_DELAY_GAME)
+            self, self.sensor,
+            SensorManager.SENSOR_DELAY_GAME
+        )
 
     def disable(self):
         self.SensorManager.unregisterListener(self, self.sensor)
@@ -37,33 +45,35 @@ class LinearAcceleration(PythonJavaClass):
         # Maybe, do something in future?
         pass
 
-class AndroidLinearAccelerometer():
+class AndroidGyroscope(Gyroscope):
     def __init__(self):
         #super().__init__()
         self.bState = False
 
     def enable(self):
         if (not self.bState):
-            self.listener = LinearAcceleration()
-            self.listener.enable()
+            self.listenerg = GyroscopeSensorListener()
+            self.listenerg.enable()
             self.bState = True
 
     def disable(self):
         if (self.bState):
             self.bState = False
-            self.listener.disable()
-            del self.listener
+            self.listenerg.disable()
+            del self.listenerg
 
-    def get_linearacceleration(self):
+    def get_rotation(self):
         if (self.bState):
-            return tuple(self.listener.values)
+            return tuple(self.listenerg.values)
         else:
             return (None, None, None)
 
+
     def __del__(self):
-        if (self.bState):
+        if(self.bState):
             self._disable()
-        #super().__del__()
+        super().__del__()
+
 
 def instance():
-    return AndroidLinearAccelerometer()
+    return AndroidGyroscope()

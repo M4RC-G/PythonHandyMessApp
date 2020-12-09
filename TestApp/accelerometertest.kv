@@ -2,23 +2,21 @@
 <AccelerometerTest>:
     BoxLayout:
         orientation: 'vertical'
+        padding: '20dp'
 
-        Label:
-            id: x_label
-            text: 'X: '
-
-        Label:
-            id: y_label
-            text: 'Y: '
-
-        Label:
-            id: z_label
-            text: 'Z: '
-
-        Label:
-            id: accel_status
-            text: ''
-
+        Graph:
+            size_hint_y: 0.8
+            id: graph_plot
+            xlabel:'Time'
+            ylabel:'Value'
+            y_grid_label: True
+            x_grid_label: True
+            padding: 5
+            xmin:0
+            xmax:100
+            ymin:-15
+            ymax:20
+            
         BoxLayout:
             size_hint_y: None
             height: '48dp'

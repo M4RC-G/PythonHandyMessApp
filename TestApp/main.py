@@ -13,7 +13,15 @@ from plyer import accelerometer
 from kivy.garden.graph import MeshLinePlot
 import datetime
 import os
+from Plot.plot import Plot3D
 import threading
+from queue import Queue
+import time
+
+import matplotlib
+matplotlib.use('module://garden_matplotlib.backend_kivy')
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 
 class AccelerometerTest(BoxLayout):
     def __init__(self, **kwargs):
@@ -29,6 +37,17 @@ class AccelerometerTest(BoxLayout):
         self.plot.append(MeshLinePlot(color=[0, 0, 1, 1]))  # Z - Blue
 
         self.reset_plots()
+        #self.plot3D = Plot3D()
+        #self.ids.matplotlib_plot.add_widget(self.plot3D)
+        self.fig = plt.figure()
+        self.ax = self.fig.gca(projection="3d")
+        self.ax.plot([], [], [])
+        self.mpl_canvas = self.fig.canvas
+        self.ids.matplotlib_plot.add_widget(self.mpl_canvas)
+
+
+        #self.q_data = Queue()
+        #self.q_bool = Queue()
 
         request_permissions([Permission.WRITE_EXTERNAL_STORAGE, Permission.READ_EXTERNAL_STORAGE])
         try:
@@ -108,17 +127,27 @@ class AccelerometerTest(BoxLayout):
                 self.x_ro.clear()
                 self.y_ro.clear()
                 self.z_ro.clear()
-                Clock.schedule_interval(self.get_linearacceleration, 1 / 20.)
-
+                self.ax.clear()
+                #self.q_data.queue.clear()
+                #self.q_bool.queue.clear()
                 self.linaccelEnabled = True
+                #self.q_bool.put(self.linaccelEnabled)
+                Clock.schedule_interval(self.get_linearacceleration, 1 / 20.)
+                Clock.schedule_interval(self.plotfunc, 1)
+                #self.thread = threading.Thread(target=self.readsensorvalues, args=(self.q_data, self.q_bool,))
+                #self.thread.start()
+
                 self.ids.toggle_button2.text = "Stop Linear Accelerometer"
             else:
                 self.gyro.disable()
                 self.acc.disable()
+                #self.plot3D.plot(self.x_accel, self.y_accel, self.z_accel)
                 Clock.unschedule(self.get_linearacceleration)
-
+                Clock.unschedule(self.plot)
                 self.linaccelEnabled = False
+                #self.q_bool.put(self.linaccelEnabled)
                 self.ids.toggle_button2.text = "Start Linear Accelerometer"
+                #self.thread.join()
                 time = datetime.datetime.now()
                 time = time.strftime("%H%M%S")
                 if not os.path.exists(os.path.join(self.sdpath, "linearacceleration")):
@@ -146,7 +175,7 @@ class AccelerometerTest(BoxLayout):
     def get_linearacceleration(self, dt):
         if (self.counter == 100):
             for plot in self.plot:
-                del(plot.points[0])
+                del (plot.points[0])
                 plot.points[:] = [(i[0] - 1, i[1]) for i in plot.points[:]]
 
             self.counter = 99
@@ -154,7 +183,7 @@ class AccelerometerTest(BoxLayout):
         gyro = self.gyro.get_rotation()
         lin = self.acc.get_linearacceleration()
 
-        if(not lin == (None, None, None)):
+        if (not lin == (None, None, None)):
             self.plot[0].points.append((self.counter, lin[0]))
             self.x_ro.append(gyro[0])
             self.x_accel.append(lin[0])
@@ -167,6 +196,11 @@ class AccelerometerTest(BoxLayout):
 
         self.counter += 1
 
+
+    def plotfunc(self, t):
+        #self.plot3D.plot(self.x_accel, self.y_accel, self.z_accel)
+        self.ax.plot(self.x_accel, self.y_accel, self.z_accel)
+        self.mpl_canvas.draw()
 
     def get_acceleration(self, dt):
         if (self.counter == 100):
@@ -191,6 +225,39 @@ class AccelerometerTest(BoxLayout):
             self.z_accel.append(accel[2])
 
         self.counter += 1
+
+
+    # def readsensorvalues(self, q_data, q_bool):
+    #     accelerometer = AndroidLinearAccelerometer()
+    #     gyroscope = AndroidGyroscope()
+    #     accelerometer.enable()
+    #     gyroscope.enable()
+    #     x_acceleration = []
+    #     x_gyro = []
+    #     y_acceleration = []
+    #     y_gyro = []
+    #     z_acceleration = []
+    #     z_gyro = []
+    #     bool = True
+    #     while bool:
+    #         gyro = gyroscope.get_rotation()
+    #         lin = accelerometer.get_linearacceleration()
+    #         if (not lin == (None, None, None)):
+    #             x_gyro.append(gyro[0])
+    #             x_acceleration.append(lin[0])
+    #             y_gyro.append(gyro[1])
+    #             y_acceleration.append(lin[1])
+    #             z_gyro.append(gyro[2])
+    #             z_acceleration.append(lin[2])
+    #             q_data.put((x_acceleration, y_acceleration, z_acceleration, x_gyro, y_gyro, z_gyro))
+    #         if not q_bool.empty():
+    #             bool = q_bool.get()
+    #             q_bool.task_done()
+    #         time.sleep(1/50)
+    #     if not bool:
+    #         accelerometer.disable()
+    #         gyroscope.disable()
+
 
 
 class AccelerometerTestApp(App):

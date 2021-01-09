@@ -72,7 +72,7 @@ class AndroidGyroscope(Gyroscope):
     def __del__(self):
         if(self.bState):
             self._disable()
-        super().__del__()
+        #super().__del__()
 
 
 def instance():

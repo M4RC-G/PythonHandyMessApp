@@ -3,10 +3,16 @@ from kivy.lang import Builder
 from kivy.core.window import Window
 from kivy.uix.screenmanager import ScreenManager, Screen
 from kivymd.uix.datatables import MDDataTable
+from kivymd.uix.boxlayout import MDBoxLayout
+from gyro import AndroidGyroscope
+from linaccel import AndroidLinearAccelerometer
+from kivy.clock import Clock
+from jnius import autoclass
+import datetime
+import os
+from android.permissions import request_permissions, Permission
 
 
-
-Window.size = (320, 520)
 
 screen_helper = """
 ScreenManager:
@@ -18,7 +24,7 @@ ScreenManager:
 
 <MenuScreen>:
     name: 'menu'
-    BoxLayout:
+    MDBoxLayout:
         orientation: 'vertical'
         MDToolbar:
             title: '360° ACC Track'
@@ -53,7 +59,7 @@ ScreenManager:
 
 <MeasureScreen>:
     name: 'measure'
-    BoxLayout:
+    MDBoxLayout:
         orientation: 'vertical'
         MDToolbar:
             title: '360° ACC Track'
@@ -71,12 +77,15 @@ ScreenManager:
     MDRectangleFlatButton:
         text: 'Start'
         pos_hint: {'center_x':0.2, 'center_y':0.13}
+        on_press: app.start_measurement()
     MDRectangleFlatButton:
         text: 'Stop'
         pos_hint: {'center_x':0.5, 'center_y':0.13} 
+        on_press: app.stop_measurement()
     MDRectangleFlatButton:
         text: 'Save'
-        pos_hint: {'center_x':0.8, 'center_y':0.13} 
+        pos_hint: {'center_x':0.8, 'center_y':0.13}
+        on_press: app.save_data() 
     
     MDIconButton:
         icon: "keyboard-backspace"
@@ -208,12 +217,8 @@ class DataScreen(Screen):
 class OffsetScreen(Screen):
     pass
 
-
-sm = ScreenManager()
-sm.add_widget(MenuScreen(name='menu'))
-sm.add_widget(MeasureScreen(name='measure'))
-sm.add_widget(DataScreen(name='showdata'))
-sm.add_widget(OffsetScreen(name='offset'))
+class MeasurementLayout(MDBoxLayout):
+    pass
 
 
 class DemoApp(MDApp):
@@ -222,8 +227,88 @@ class DemoApp(MDApp):
         screen = Builder.load_string(screen_helper)
         return screen
 
+    def init_measurement(self):
+        """"Request Permissions to write, set path to save files, instantiate sensors and
+            create empty lists to save sensor values"""
+        request_permissions([Permission.WRITE_EXTERNAL_STORAGE, Permission.READ_EXTERNAL_STORAGE])
+        try:
+            Environment = autoclass("android.os.Environment")
+            self.sdpath = Environment.getExternalStorageDirectory().getAbsolutePath()
+        except:
+            self.sdpath = MDApp.get_running_app().user_data_dir
+        if not os.path.exists(os.path.join(self.sdpath, "AccGyroData")):
+            os.mkdir(os.path.join(self.sdpath, "AccGyroData"))
+        self.sdpath += "/AccGyroData"
 
-DemoApp().run()
+        self.x_rotation = []
+        self.y_rotation = []
+        self.z_rotation = []
+        self.x_acceleration = []
+        self.y_acceleration = []
+        self.z_acceleration = []
+        self.accelerometer = AndroidLinearAccelerometer()
+        self.gyroscope = AndroidGyroscope()
+
+    def start_measurement(self):
+        """"Start measurement. Calls init_measurement function and enables the sensors.
+            Lists to save values are being cleared and a timer to read the sensor data gets started"""
+        self.init_measurement()
+        self.gyroscope.enable()
+        self.accelerometer.enable()
+        self.gyroscope.enable()
+        self.accelerometer.enable()
+        self.x_acceleration.clear()
+        self.y_acceleration.clear()
+        self.z_acceleration.clear()
+        self.x_rotation.clear()
+        self.y_rotation.clear()
+        self.z_rotation.clear()
+        Clock.schedule_interval(self.get_sensordata, 1 / 20)
+
+    def stop_measurement(self):
+        """"Disable Sensors and unschedule get_sensordata function"""
+        self.gyroscope.disable()
+        self.accelerometer.disable()
+        Clock.unschedule(self.get_sensordata)
+
+
+    def save_data(self):
+        """"Saves recorded sensordata to a .csv file named with date and current time"""
+        time = datetime.datetime.now()
+        time = time.strftime("%Y%m%d_%H%M%S")
+        if not os.path.exists(os.path.join(self.sdpath, "acceleration")):
+            os.mkdir(os.path.join(self.sdpath, "acceleration"))
+        f = open(self.sdpath + "/acceleration/" + time + ".csv", "w+")
+        f.write("t[s],ax[m/s2],ay[m/s2],az[m/s2],\u03C9x[rad/s],\u03C9y[rad/s],\u03C9z[rad/s]\n")
+        t = 0
+        for i in range(len(self.x_acceleration)):
+            f.write(str(t) + "," + str(self.x_acceleration[i]) + "," + str(self.y_acceleration[i]) + "," + str(
+                self.z_acceleration[i]) + "," + str(self.x_rotation[i])
+                    + "," + str(self.y_rotation[i]) + "," + str(self.z_rotation[i]))
+            f.write("\n")
+            t += 0.05
+
+        f.close()
+
+    def get_sensordata(self, t):
+        """Reads sensordata and appends them to the corresponding list every time the function gets called"""
+        gyro = self.gyroscope.get_rotation()
+        lin = self.accelerometer.get_linearacceleration()
+
+        if (not lin == (None, None, None)):
+            # self.plot[0].points.append((self.counter, lin[0]))
+            self.x_rotation.append(gyro[0])
+            self.x_acceleration.append(lin[0])
+            # self.plot[1].points.append((self.counter, lin[1]))
+            self.y_rotation.append(gyro[1])
+            self.y_acceleration.append(lin[1])
+            # self.plot[2].points.append((self.counter, lin[2]))
+            self.z_rotation.append(gyro[2])
+            self.z_acceleration.append(lin[2])
+
+
+if __name__ == "__main__":
+    DemoApp().run()
 
 
 

@@ -11,8 +11,7 @@ from jnius import autoclass
 import datetime
 import os
 from android.permissions import request_permissions, Permission
-
-
+from kivy.garden.graph import Graph, MeshLinePlot
 
 screen_helper = """
 ScreenManager:
@@ -20,20 +19,15 @@ ScreenManager:
     MeasureScreen:
     DataScreen:
     OffsetScreen:
-
-
 <MenuScreen>:
     name: 'menu'
-    MDBoxLayout:
+    BoxLayout:
         orientation: 'vertical'
         MDToolbar:
             title: '360° ACC Track'
             left_action_items: [["home", lambda x: nav_drawer.toggle_nav_drawer()]]
             elevation:10
-
         Widget:
-
-
     MDRectangleFlatButton:
         text: '       Offset & Gain       '
         icon: 'run-fast'
@@ -55,66 +49,76 @@ ScreenManager:
         on_press: 
             root.manager.current = 'measure'
             root.manager.transition.direction = "left"
-
-
+            
 <MeasureScreen>:
     name: 'measure'
-    MDBoxLayout:
+    BoxLayout:
         orientation: 'vertical'
         MDToolbar:
             title: '360° ACC Track'
             left_action_items: [["menu", lambda x: nav_drawer.toggle_nav_drawer()]]
             elevation:10
-
-        Widget:
-    
+        
+        Graph:
+            size_hint_y: 0.8
+            id: graph_plot
+            xlabel:'Time'
+            ylabel:'Value'
+            y_grid_label: True
+            x_grid_label: True
+            padding: 5
+            xmin:0
+            xmax:100
+            ymin:-15
+            ymax:20
+        
     MDRoundFlatIconButton:
         icon: "settings"
         text: "Offset & Gain"
         on_press: root.manager.current = 'offset'
         pos_hint: {'center_x':0.5, 'center_y':0.05}
-        
+
     MDRectangleFlatButton:
         text: 'Start'
         pos_hint: {'center_x':0.2, 'center_y':0.13}
-        on_press: app.start_measurement()
+        on_press: root.start_measurement()
     MDRectangleFlatButton:
         text: 'Stop'
-        pos_hint: {'center_x':0.5, 'center_y':0.13} 
-        on_press: app.stop_measurement()
+        pos_hint: {'center_x':0.5, 'center_y':0.13}
+        on_press: root.stop_measurement()
     MDRectangleFlatButton:
         text: 'Save'
         pos_hint: {'center_x':0.8, 'center_y':0.13}
-        on_press: app.save_data() 
-    
+        on_press: root.save_data()
+
     MDIconButton:
         icon: "keyboard-backspace"
         on_press:
             root.manager.current = 'menu'
             root.manager.transition.direction = "right"
         pos_hint: {'center_x':0.1, 'center_y':0.05}
-
+    
 <DataScreen>:
     name: 'showdata'
-    
+
     MDRectangleFlatButton:
         text: 'Restore Track'
         pos_hint: {'center_x':0.26, 'center_y':0.13} 
     MDRectangleFlatButton:
         text: 'Restore Values'
         pos_hint: {'center_x':0.73, 'center_y':0.13} 
-        
+
     MDIconButton:
         icon: "keyboard-backspace"
         on_press:
             root.manager.current = 'menu'
             root.manager.transition.direction = "right"
         pos_hint: {'center_x':0.1, 'center_y':0.05}
-            
-            
+
+
 <OffsetScreen>:
     name: 'offset'
-    
+
     MDSwitch:
         id: 'delay'
         pos_hint: {'center_x': 0.1, 'center_y': 0.95}
@@ -125,7 +129,7 @@ ScreenManager:
         size_hint: 0.3, None
         height: "30dp"
         pos_hint: {'center_x': 0.7, 'center_y': 0.95}
-        
+
     MDSwitch:
         id: 'duration'
         pos_hint: {'center_x': 0.1, 'center_y': 0.85}
@@ -136,7 +140,7 @@ ScreenManager:
         size_hint: 0.3, None
         height: "30dp"
         pos_hint: {'center_x': 0.7, 'center_y': 0.85}
-        
+
     MDSwitch:
         id: 'offset_lin'
         pos_hint: {'center_x': 0.1, 'center_y': 0.75}
@@ -164,7 +168,7 @@ ScreenManager:
         size_hint: 0.3, None
         height: "30dp"
         pos_hint: {'center_x': 0.7, 'center_y': 0.5}
-        
+
     MDSwitch:
         id: 'offset_rot'
         pos_hint: {'center_x': 0.1, 'center_y': 0.4}
@@ -192,7 +196,7 @@ ScreenManager:
         size_hint: 0.3, None
         height: "30dp"
         pos_hint: {'center_x': 0.7, 'center_y': 0.15}
-    
+
     MDIconButton:
         icon: "keyboard-backspace"
         on_press:
@@ -202,30 +206,35 @@ ScreenManager:
 """
 
 
+
 class MenuScreen(Screen):
     pass
 
 
 class MeasureScreen(Screen):
-    pass
+    def __init__(self, **kwargs):
+        super(MeasureScreen, self).__init__(**kwargs)
+        Clock.schedule_once(self.init)
 
+    def init(self, t):
+        self.graph = self.ids.graph_plot
+        #self.add_widget(self.graph)
 
-class DataScreen(Screen):
-    pass
+        # For all X, Y and Z axes
+        self.plot = []
+        self.plot.append(MeshLinePlot(color=[1, 0, 0, 1]))  # X - Red
+        self.plot.append(MeshLinePlot(color=[0, 1, 0, 1]))  # Y - Green
+        self.plot.append(MeshLinePlot(color=[0, 0, 1, 1]))  # Z - Blue
 
+        self.reset_plots()
+        for plot in self.plot:
+            self.graph.add_plot(plot)
 
-class OffsetScreen(Screen):
-    pass
+        self.counter = 1
 
-class MeasurementLayout(MDBoxLayout):
-    pass
-
-
-class DemoApp(MDApp):
-
-    def build(self):
-        screen = Builder.load_string(screen_helper)
-        return screen
+    def reset_plots(self):
+        for plot in self.plot:
+            plot.points = [(0, 0)]
 
     def init_measurement(self):
         """"Request Permissions to write, set path to save files, instantiate sensors and
@@ -271,7 +280,6 @@ class DemoApp(MDApp):
         self.accelerometer.disable()
         Clock.unschedule(self.get_sensordata)
 
-
     def save_data(self):
         """"Saves recorded sensordata to a .csv file named with date and current time"""
         time = datetime.datetime.now()
@@ -292,19 +300,53 @@ class DemoApp(MDApp):
 
     def get_sensordata(self, t):
         """Reads sensordata and appends them to the corresponding list every time the function gets called"""
+        if (self.counter == 100):
+            for plot in self.plot:
+                del (plot.points[0])
+                plot.points[:] = [(i[0] - 1, i[1]) for i in plot.points[:]]
+
+            self.counter = 99
+
         gyro = self.gyroscope.get_rotation()
         lin = self.accelerometer.get_linearacceleration()
 
         if (not lin == (None, None, None)):
-            # self.plot[0].points.append((self.counter, lin[0]))
+            self.plot[0].points.append((self.counter, lin[0]))
             self.x_rotation.append(gyro[0])
             self.x_acceleration.append(lin[0])
-            # self.plot[1].points.append((self.counter, lin[1]))
+            self.plot[1].points.append((self.counter, lin[1]))
             self.y_rotation.append(gyro[1])
             self.y_acceleration.append(lin[1])
-            # self.plot[2].points.append((self.counter, lin[2]))
+            self.plot[2].points.append((self.counter, lin[2]))
             self.z_rotation.append(gyro[2])
             self.z_acceleration.append(lin[2])
+
+        self.counter += 1
+
+
+
+class DataScreen(Screen):
+    pass
+
+
+class OffsetScreen(Screen):
+    pass
+
+class MeasurementLayout(MDBoxLayout):
+    pass
+
+
+class DemoApp(MDApp):
+    def build(self):
+        screen = Builder.load_string(screen_helper)
+        sm = ScreenManager()
+        sm.add_widget(MenuScreen(name='menu'))
+        sm.add_widget(MeasureScreen(name='measure'))
+        sm.add_widget(DataScreen(name='showdata'))
+        sm.add_widget(OffsetScreen(name='offset'))
+        return screen
+
+
 
 
 if __name__ == "__main__":

@@ -7,9 +7,12 @@ from kivymd.uix.boxlayout import MDBoxLayout
 from kivy.uix.boxlayout import BoxLayout
 from kivymd.uix.textfield import MDTextFieldRect
 from kivymd.uix.selectioncontrol import MDSwitch
+from kivy.properties import ObjectProperty
+from kivy.properties import StringProperty
+from kivy.uix.filechooser import FileChooserIconView
 from gyro import AndroidGyroscope
 from linaccel import AndroidLinearAccelerometer
-from kivy.clock import Clock
+from kivy.clock import Clock, mainthread
 from jnius import autoclass
 import datetime
 import os
@@ -22,6 +25,7 @@ ScreenManager:
     MeasureScreen:
     DataScreen:
     OffsetScreen:
+    TrackScreen:
         
 <MenuScreen>:
     name: 'menu'
@@ -115,10 +119,11 @@ ScreenManager:
     
 <DataScreen>:
     name: 'showdata'
-
+               
     MDRectangleFlatButton:
         text: 'Restore Track'
-        pos_hint: {'center_x':0.26, 'center_y':0.13} 
+        pos_hint: {'center_x':0.26, 'center_y':0.13}
+        on_press: root.restore_track() 
     MDRectangleFlatButton:
         text: 'Restore Values'
         pos_hint: {'center_x':0.73, 'center_y':0.13} 
@@ -226,6 +231,9 @@ ScreenManager:
             root.manager.current = 'menu'
             root.manager.transition.direction = "right"
         pos_hint: {'center_x':0.1, 'center_y':0.05}
+        
+<TrackScreen>
+    name: "track"
 """
 
 
@@ -249,7 +257,15 @@ class MeasureScreen(Screen):
         self.acc_plot.append(MeshLinePlot(color=[1, 0, 0, 1]))  # X - Red
         self.acc_plot.append(MeshLinePlot(color=[0, 1, 0, 1]))  # Y - Green
         self.acc_plot.append(MeshLinePlot(color=[0, 0, 1, 1]))  # Z - Blue
-
+        request_permissions([Permission.WRITE_EXTERNAL_STORAGE, Permission.READ_EXTERNAL_STORAGE])
+        try:
+            Environment = autoclass("android.os.Environment")
+            self.sdpath = Environment.getExternalStorageDirectory().getAbsolutePath()
+        except:
+            self.sdpath = MDApp.get_running_app().user_data_dir
+        if not os.path.exists(os.path.join(self.sdpath, "Acc360Track")):
+            os.mkdir(os.path.join(self.sdpath, "Acc360Track"))
+        self.sdpath += "/Acc360Track/"
         self.reset_plots()
         for plot in self.acc_plot:
             self.acc_graph.add_plot(plot)
@@ -264,29 +280,36 @@ class MeasureScreen(Screen):
     def init_measurement(self):
         """"Request Permissions to write, set path to save files, instantiate sensors and
             create empty lists to save sensor values"""
-        request_permissions([Permission.WRITE_EXTERNAL_STORAGE, Permission.READ_EXTERNAL_STORAGE])
-        try:
-            Environment = autoclass("android.os.Environment")
-            self.sdpath = Environment.getExternalStorageDirectory().getAbsolutePath()
-        except:
-            self.sdpath = MDApp.get_running_app().user_data_dir
-        if not os.path.exists(os.path.join(self.sdpath, "AccGyroData")):
-            os.mkdir(os.path.join(self.sdpath, "AccGyroData"))
-        self.sdpath += "/AccGyroData"
-
         self.linoffset = False
         self.rotoffset = False
         if self.manager.screens[3].ids["offset_lin"].active:
             self.linoffset = True
-            self.x_offset_lin = float(self.manager.screens[3].ids["x_linoff"].text)
-            self.y_offset_lin = float(self.manager.screens[3].ids["y_linoff"].text)
-            self.z_offset_lin = float(self.manager.screens[3].ids["z_linoff"].text)
+            if self.manager.screens[3].ids["x_linoff"].text:
+                self.x_offset_lin = float(self.manager.screens[3].ids["x_linoff"].text)
+            else:
+                self.x_offset_lin = 0
+            if self.manager.screens[3].ids["y_linoff"].text:
+                self.y_offset_lin = float(self.manager.screens[3].ids["y_linoff"].text)
+            else:
+                self.y_offset_lin = 0
+            if self.manager.screens[3].ids["z_linoff"].text:
+                self.z_offset_lin = float(self.manager.screens[3].ids["z_linoff"].text)
+            else:
+                self.z_offset_lin = 0
         if self.manager.screens[3].ids["offset_rot"].active:
             self.rotoffset = True
-            self.x_offset_rot = float(self.manager.screens[3].ids["x_rotoff"].text)
-            self.y_offset_rot = float(self.manager.screens[3].ids["y_rotoff"].text)
-            self.z_offset_rot = float(self.manager.screens[3].ids["z_rotoff"].text)
-
+            if self.manager.screens[3].ids["x_rotoff"].text:
+                self.x_offset_rot = float(self.manager.screens[3].ids["x_rotoff"].text)
+            else:
+                self.x_offset_rot = 0
+            if self.manager.screens[3].ids["y_rotoff"].text:
+                self.y_offset_rot = float(self.manager.screens[3].ids["y_rotoff"].text)
+            else:
+                self.y_offset_rot = 0
+            if self.manager.screens[3].ids["y_rotoff"].text:
+                self.z_offset_rot = float(self.manager.screens[3].ids["y_rotoff"].text)
+            else:
+                self.z_offset_rot = 0
         self.x_rotation = []
         self.y_rotation = []
         self.z_rotation = []
@@ -301,13 +324,15 @@ class MeasureScreen(Screen):
             Lists to save values are being cleared and a timer to read the sensor data gets started"""
         self.init_measurement()
         if self.manager.screens[3].ids["delay"].active:
-            Clock.schedule_once(self.start_measurement, float(self.manager.screens[3].ids["delay_value"].text))
+            Clock.schedule_once(self.start_measurement,
+                                float(self.manager.screens[3].ids["delay_value"].text))
         else:
             self.start_measurement(t=0)
 
     def start_measurement(self, t):
         if self.manager.screens[3].ids["duration"].active:
-            Clock.schedule_once(self.stop_measurement_duration, float(self.manager.screens[3].ids["duration_value"].text))
+            Clock.schedule_once(self.stop_measurement_duration,
+                                float(self.manager.screens[3].ids["duration_value"].text))
         self.gyroscope.enable()
         self.accelerometer.enable()
         self.gyroscope.enable()
@@ -337,9 +362,7 @@ class MeasureScreen(Screen):
         """"Saves recorded sensordata to a .csv file named with date and current time"""
         time = datetime.datetime.now()
         time = time.strftime("%Y%m%d_%H%M%S")
-        if not os.path.exists(os.path.join(self.sdpath, "acceleration")):
-            os.mkdir(os.path.join(self.sdpath, "acceleration"))
-        f = open(self.sdpath + "/acceleration/" + time + ".csv", "w+")
+        f = open(self.sdpath + time + ".csv", "w+")
         f.write("t[s],ax[m/s2],ay[m/s2],az[m/s2],\u03C9x[rad/s],\u03C9y[rad/s],\u03C9z[rad/s]\n")
         t = 0
         for i in range(len(self.x_acceleration)):
@@ -392,7 +415,39 @@ class MeasureScreen(Screen):
 
 
 class DataScreen(Screen):
-    pass
+    def __init__(self, **kwargs):
+        super(DataScreen, self).__init__(**kwargs)
+        try:
+            Environment = autoclass("android.os.Environment")
+            self.sdpath = Environment.getExternalStorageDirectory().getAbsolutePath()
+        except:
+            self.sdpath = MDApp.get_running_app().user_data_dir
+        self.sdpath += "/Acc360Track/"
+        self.viewer = FileChooserIconView()
+        self.viewer.id = "filechooser"
+        self.viewer.path = self.sdpath
+        if self.init_widget():
+            self.add_widget(self.viewer)
+
+
+
+    def init_widget(self, *args):
+        fc = self.viewer
+        fc.bind(on_entry_added=self.update_file_list_entry)
+        fc.bind(on_subentry_to_entry=self.update_file_list_entry)
+        return True
+
+    def update_file_list_entry(self, file_chooser, file_list_entry, *args):
+        file_list_entry.children[0].color = (0.0, 0.0, 0.0, 1.0)  # File Names
+        file_list_entry.children[1].color = (0.0, 0.0, 0.0, 1.0)  # Dir Names`
+        file_list_entry.children[1].font_size = ("14sp")
+        file_list_entry.children[1].shorten = False
+        file_list_entry.children[1].size = ("100dp", "50sp")
+        # https://github.com/kivy/kivy/blob/master/kivy/data/style.kv
+
+    def restore_track(self):
+        if self.viewer.selection:
+
 
 
 class OffsetScreen(Screen):

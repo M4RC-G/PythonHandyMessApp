@@ -4,6 +4,7 @@ from kivy.core.window import Window
 from kivy.uix.screenmanager import ScreenManager, Screen
 from kivymd.uix.datatables import MDDataTable
 from kivymd.uix.boxlayout import MDBoxLayout
+from kivy.uix.boxlayout import BoxLayout
 from kivymd.uix.textfield import MDTextFieldRect
 from kivymd.uix.selectioncontrol import MDSwitch
 from gyro import AndroidGyroscope
@@ -53,6 +54,11 @@ ScreenManager:
             root.manager.current = 'measure'
             root.manager.transition.direction = "left"
             
+    MDNavigationDrawer:
+        id: nav_drawer
+    
+        ContentNavigationDrawer:
+            
 <MeasureScreen>:
     name: 'measure'
     BoxLayout:
@@ -101,6 +107,11 @@ ScreenManager:
             root.manager.current = 'menu'
             root.manager.transition.direction = "right"
         pos_hint: {'center_x':0.1, 'center_y':0.05}
+    
+    MDNavigationDrawer:
+        id: nav_drawer
+    
+        ContentNavigationDrawer:
     
 <DataScreen>:
     name: 'showdata'
@@ -218,6 +229,8 @@ ScreenManager:
 """
 
 
+class ContentNavigationDrawer(BoxLayout):
+    pass
 
 class MenuScreen(Screen):
     pass

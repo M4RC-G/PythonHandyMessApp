@@ -61,7 +61,55 @@ ScreenManager:
     MDNavigationDrawer:
         id: nav_drawer
     
-        ContentNavigationDrawer:
+        BoxLayout:
+                orientation: 'vertical'
+                spacing: '8dp'
+                padding: '8dp'
+
+                Image:
+                    source: 'AccTrack.jpeg'
+                    size_hint_x: None
+                    size_hint_y: None
+                    width: 200
+
+                MDList:
+                    OneLineIconListItem:
+                        text: 'Start measurement'
+                        IconLeftWidget:
+                            icon: 'run-fast'
+                    OneLineIconListItem:
+                        text: 'Show logged data'
+                        IconLeftWidget:
+                            icon: 'database-search'
+                    OneLineIconListItem:
+                        text: 'Offset & Gain'
+                        IconLeftWidget:
+                            icon: 'map-marker-distance'
+                            on_press:
+                                root.manager.current = 'offset'
+                                root.manager.transition.direction = "left"
+                    OneLineIconListItem:
+                        text: 'Settings'
+                        IconLeftWidget:
+                            icon: 'settings-outline'
+                    OneLineIconListItem:
+                        text: 'About'
+                        IconLeftWidget:
+                            icon: 'information-outline'
+                    OneLineIconListItem:
+                        text: 'Help'
+                        IconLeftWidget:
+                            icon: 'help-circle-outline'
+
+                Image:
+                    source: 'HE_Logo.png'
+                    size_hint_x: 0.6
+
+                MDLabel:
+                    text: 'ATB6 ETB6 MTB6 - WS 2020/21'
+                    font_style: 'Caption'
+                    size_hint_y: None
+                    height: self.texture_size[1]
             
 <MeasureScreen>:
     name: 'measure'
@@ -119,7 +167,13 @@ ScreenManager:
     
 <DataScreen>:
     name: 'showdata'
-               
+    BoxLayout:
+        orientation: 'vertical'
+        MDToolbar:
+            title: '360° ACC Track'
+            left_action_items: [["home", lambda x: nav_drawer.toggle_nav_drawer()]]
+            elevation:10
+        Widget:           
     MDRectangleFlatButton:
         text: 'Restore Track'
         pos_hint: {'center_x':0.26, 'center_y':0.13}
@@ -135,10 +189,22 @@ ScreenManager:
             root.manager.transition.direction = "right"
         pos_hint: {'center_x':0.1, 'center_y':0.05}
 
+    MDNavigationDrawer:
+        id: nav_drawer
+    
+        ContentNavigationDrawer:
 
 <OffsetScreen>:
     name: 'offset'
-
+    
+    BoxLayout:
+        orientation: 'vertical'
+        MDToolbar:
+            title: '360° ACC Track'
+            left_action_items: [["home", lambda x: nav_drawer.toggle_nav_drawer()]]
+            elevation:10
+        Widget:
+    
     MDSwitch:
         id: delay
         pos_hint: {'center_x': 0.1, 'center_y': 0.95}
@@ -231,7 +297,13 @@ ScreenManager:
             root.manager.current = 'menu'
             root.manager.transition.direction = "right"
         pos_hint: {'center_x':0.1, 'center_y':0.05}
-        
+    
+    
+    MDNavigationDrawer:
+        id: nav_drawer
+    
+        ContentNavigationDrawer:
+    
 <TrackScreen>
     name: "track"
 """

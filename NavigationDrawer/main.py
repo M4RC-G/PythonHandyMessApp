@@ -13,7 +13,7 @@ from kivy.properties import StringProperty
 from kivy.uix.filechooser import FileChooserIconView
 from gyro import AndroidGyroscope
 from linaccel import AndroidLinearAccelerometer
-from kivy.clock import Clock, mainthread
+from kivy.clock import Clock
 from jnius import autoclass
 import datetime
 import os
@@ -21,8 +21,11 @@ from android.permissions import request_permissions, Permission
 from kivy.garden.graph import Graph, MeshLinePlot
 from kivymd.app import MDApp
 from kivymd.uix.navigationdrawer import MDNavigationDrawer
-
-Window.size = (370, 620)
+import track
+import matplotlib
+matplotlib.use('module://garden_matplotlib.backend_kivy')
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 
 screen_helper = """
 ScreenManager:
@@ -30,6 +33,7 @@ ScreenManager:
     MeasureScreen:
     DataScreen:
     SettingScreen:
+    TrackScreen:
 <MenuScreen>:
     name: 'menu'
     BoxLayout:
@@ -169,7 +173,9 @@ ScreenManager:
     MDRectangleFlatButton:
         text: 'Restore Track'
         pos_hint: {'center_x':0.26, 'center_y':0.13}
-        on_press: root.restore_track() 
+        on_press: 
+            root.manager.current = 'track'
+            root.manager.transition.direction = "left" 
     MDRectangleFlatButton:
         text: 'Restore Values'
         pos_hint: {'center_x':0.73, 'center_y':0.13} 
@@ -194,7 +200,7 @@ ScreenManager:
         Widget:
 
     MDSwitch:
-        id: 'delay'
+        id: delay
         pos_hint: {'center_x': 0.1, 'center_y': 0.85}
     MDLabel:
         text: "Delay in s"
@@ -218,7 +224,7 @@ ScreenManager:
         pos_hint: {'center_x': 0.7, 'center_y': 0.85}
 
     MDSwitch:
-        id: 'samplingrate'
+        id: samplingrate
         pos_hint: {'center_x': 0.1, 'center_y': 0.69}
     MDLabel:
         text: "samplingrate"
@@ -296,7 +302,7 @@ ScreenManager:
         on_press:
             root.manager.current = 'menu'
             root.manager.transition.direction = "right"
-        pos_hint: {'center_x':0.1, 'center_y':0.05}
+        pos_hint: {'center_x':0.1, 'center_y': 0.05}
         
     MDRoundFlatIconButton:
         icon: "run-fast"
@@ -306,14 +312,20 @@ ScreenManager:
         
     MDNavigationDrawer:
 
+<TrackScreen>
+    name: 'track'
+
+    BoxLayout:
+        orientation: 'vertical'
+        
+        MDTextField:
+            id: test
+
 """
 
 class ContentNavigationDrawer(BoxLayout):
     pass
 
-
-class ContentNavigationDrawer(BoxLayout):
-    pass
 
 class MenuScreen(Screen):
     pass
@@ -520,13 +532,18 @@ class DataScreen(Screen):
         file_list_entry.children[1].size = ("100dp", "50sp")
         # https://github.com/kivy/kivy/blob/master/kivy/data/style.kv
 
-    def restore_track(self):
-        if self.viewer.selection:
 
 
 
 class SettingScreen(Screen):
     pass
+
+class TrackScreen(Screen):
+    def __init__(self, **kwargs):
+        super(TrackScreen, self).__init__(**kwargs)
+
+    def on_enter(self):
+        self.test.text = self.manager.screens[2].ids["filechooser"].selection[0]
 
 class MeasurementLayout(MDBoxLayout):
     pass
@@ -539,7 +556,8 @@ class DemoApp(MDApp):
         sm.add_widget(MenuScreen(name='menu'))
         sm.add_widget(MeasureScreen(name='measure'))
         sm.add_widget(DataScreen(name='showdata'))
-        sm.add_widget(OffsetScreen(name='offset'))
+        sm.add_widget(SettingScreen(name='settings'))
+        sm.add_widget(TrackScreen(name='track'))
         return screen
 
 

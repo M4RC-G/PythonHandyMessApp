@@ -1,6 +1,7 @@
-from kivymd.app import MDApp
-from kivy.lang import Builder
 from kivy.core.window import Window
+from kivy.lang import Builder
+from kivymd.uix.boxlayout import MDBoxLayout
+from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.screenmanager import ScreenManager, Screen
 from kivymd.uix.datatables import MDDataTable
 from kivymd.uix.boxlayout import MDBoxLayout
@@ -18,30 +19,32 @@ import datetime
 import os
 from android.permissions import request_permissions, Permission
 from kivy.garden.graph import Graph, MeshLinePlot
+from kivymd.app import MDApp
+from kivymd.uix.navigationdrawer import MDNavigationDrawer
+
+Window.size = (370, 620)
 
 screen_helper = """
 ScreenManager:
     MenuScreen:
     MeasureScreen:
     DataScreen:
-    OffsetScreen:
-    TrackScreen:
-        
+    SettingScreen:
 <MenuScreen>:
     name: 'menu'
     BoxLayout:
         orientation: 'vertical'
         MDToolbar:
             title: '360° ACC Track'
-            left_action_items: [["home", lambda x: nav_drawer.toggle_nav_drawer()]]
+            left_action_items: [["menu", lambda x: nav_drawer.toggle_nav_drawer()]]
             elevation:10
         Widget:
     MDRectangleFlatButton:
-        text: '       Offset & Gain       '
+        text: '             Settings            '
         icon: 'run-fast'
         pos_hint: {'center_x':0.5, 'center_y':0.25}
         on_press:
-            root.manager.current = 'offset'
+            root.manager.current = 'settings'
             root.manager.transition.direction = "left"
     MDRectangleFlatButton:
         text: '  Show logged data   '
@@ -57,12 +60,53 @@ ScreenManager:
         on_press: 
             root.manager.current = 'measure'
             root.manager.transition.direction = "left"
-            
+        
     MDNavigationDrawer:
         id: nav_drawer
-    
-        ContentNavigationDrawer:
-            
+        
+        orientation: 'vertical'
+        spacing: '8dp'
+        padding: '8dp'
+
+        Image:
+            source: 'AccTrack.jpeg'
+            size_hint_x: None
+            size_hint_y: None
+            width: 200
+
+        MDList:
+            OneLineIconListItem:
+                text: 'Start measurement'
+                IconLeftWidget:
+                    icon: 'run-fast'
+                    on_press: root.manager.current = 'measure'
+            OneLineIconListItem:
+                text: 'Show logged data'
+                IconLeftWidget:
+                    icon: 'database-search'
+            OneLineIconListItem:
+                text: 'Settings'
+                IconLeftWidget:
+                    icon: 'settings-outline'
+            OneLineIconListItem:
+                text: 'About'
+                IconLeftWidget:
+                    icon: 'information-outline'
+            OneLineIconListItem:
+                text: 'Help'
+                IconLeftWidget:
+                    icon: 'help-circle-outline'
+
+        Image:
+            source: 'HE_Logo.png'
+            size_hint_x: 0.6
+
+        MDLabel:
+            text: 'ATB6 ETB6 MTB6 - WS 2020/21'
+            font_style: 'Caption'
+            size_hint_y: None
+            height: self.texture_size[1]        
+
 <MeasureScreen>:
     name: 'measure'
     BoxLayout:
@@ -88,8 +132,8 @@ ScreenManager:
         
     MDRoundFlatIconButton:
         icon: "settings"
-        text: "Offset & Gain"
-        on_press: root.manager.current = 'offset'
+        text: "Settings"
+        on_press: root.manager.current = 'settings'
         pos_hint: {'center_x':0.5, 'center_y':0.05}
 
     MDRectangleFlatButton:
@@ -106,20 +150,22 @@ ScreenManager:
         on_press: root.save_data()
 
     MDIconButton:
-        icon: "keyboard-backspace"
+        icon: "home"
         on_press:
             root.manager.current = 'menu'
             root.manager.transition.direction = "right"
         pos_hint: {'center_x':0.1, 'center_y':0.05}
-    
-    MDNavigationDrawer:
-        id: nav_drawer
-    
-        ContentNavigationDrawer:
-    
 <DataScreen>:
     name: 'showdata'
-               
+    
+    BoxLayout:
+        orientation: 'vertical'
+        MDToolbar:
+            title: '360° ACC Track'
+            left_action_items: [["menu", lambda x: nav_drawer.toggle_nav_drawer()]]
+            elevation:10
+        Widget:
+
     MDRectangleFlatButton:
         text: 'Restore Track'
         pos_hint: {'center_x':0.26, 'center_y':0.13}
@@ -129,22 +175,30 @@ ScreenManager:
         pos_hint: {'center_x':0.73, 'center_y':0.13} 
 
     MDIconButton:
-        icon: "keyboard-backspace"
+        icon: "home"
         on_press:
             root.manager.current = 'menu'
             root.manager.transition.direction = "right"
         pos_hint: {'center_x':0.1, 'center_y':0.05}
 
 
-<OffsetScreen>:
-    name: 'offset'
+<SettingScreen>:
+    name: 'settings'
+
+    BoxLayout:
+        orientation: 'vertical'
+        MDToolbar:
+            title: '360° ACC Track'
+            left_action_items: [["menu", lambda x: nav_drawer.toggle_nav_drawer()]]
+            elevation:10
+        Widget:
 
     MDSwitch:
-        id: delay
-        pos_hint: {'center_x': 0.1, 'center_y': 0.95}
+        id: 'delay'
+        pos_hint: {'center_x': 0.1, 'center_y': 0.85}
     MDLabel:
         text: "Delay in s"
-        pos_hint: {'center_x': 0.7, 'center_y': 0.95}
+        pos_hint: {'center_x': 0.7, 'center_y': 0.85}
     MDTextFieldRect:
         id: delay_value
         size_hint: 0.3, None
@@ -156,7 +210,7 @@ ScreenManager:
         pos_hint: {'center_x': 0.1, 'center_y': 0.85}
     MDLabel:
         text: "Duration in s"
-        pos_hint: {'center_x': 0.7, 'center_y': 0.85}
+        pos_hint: {'center_x': 0.7, 'center_y': 0.77}
     MDTextFieldRect:
         id: duration_value
         size_hint: 0.3, None
@@ -164,30 +218,42 @@ ScreenManager:
         pos_hint: {'center_x': 0.7, 'center_y': 0.85}
 
     MDSwitch:
+        id: 'samplingrate'
+        pos_hint: {'center_x': 0.1, 'center_y': 0.69}
+    MDLabel:
+        text: "samplingrate"
+        pos_hint: {'center_x': 0.7, 'center_y': 0.69}
+    MDTextFieldRect:
+        size_hint: 0.3, None
+        height: "30dp"
+        pos_hint: {'center_x': 0.7, 'center_y': 0.69}
+
+    MDSwitch:
         id: offset_lin
         pos_hint: {'center_x': 0.1, 'center_y': 0.75}
+        pos_hint: {'center_x': 0.7, 'center_y': 0.77}
     MDLabel:
         text: "Offset Linear"
-        pos_hint: {'center_x': 0.7, 'center_y': 0.75}
+        pos_hint: {'center_x': 0.7, 'center_y': 0.61}
     MDLabel:
         text: "X"
-        pos_hint: {'center_x': 0.9, 'center_y': 0.7}
+        pos_hint: {'center_x': 0.9, 'center_y': 0.57}
     MDTextFieldRect:
         id: x_linoff
         size_hint: 0.3, None
         height: "30dp"
-        pos_hint: {'center_x': 0.7, 'center_y': 0.7}
+        pos_hint: {'center_x': 0.7, 'center_y': 0.57}
     MDLabel:
         text: "Y"
-        pos_hint: {'center_x': 0.9, 'center_y': 0.6}
+        pos_hint: {'center_x': 0.9, 'center_y': 0.49}
     MDTextFieldRect:
         id: y_linoff
         size_hint: 0.3, None
         height: "30dp"
-        pos_hint: {'center_x': 0.7, 'center_y': 0.6}
+        pos_hint: {'center_x': 0.7, 'center_y': 0.49}
     MDLabel:
         text: "Z"
-        pos_hint: {'center_x': 0.9, 'center_y': 0.5}
+        pos_hint: {'center_x': 0.9, 'center_y': 0.41}
     MDTextFieldRect:
         id: z_linoff
         size_hint: 0.3, None
@@ -199,42 +265,51 @@ ScreenManager:
         pos_hint: {'center_x': 0.1, 'center_y': 0.4}
     MDLabel:
         text: "Offset Rotatorisch"
-        pos_hint: {'center_x': 0.7, 'center_y': 0.4}
+        pos_hint: {'center_x': 0.7, 'center_y': 0.33}
     MDLabel:
         text: "X"
-        pos_hint: {'center_x': 0.9, 'center_y': 0.35}
+        pos_hint: {'center_x': 0.9, 'center_y': 0.29}
     MDTextFieldRect:
         id: x_rotoff
         size_hint: 0.3, None
         height: "30dp"
-        pos_hint: {'center_x': 0.7, 'center_y': 0.35}
+        pos_hint: {'center_x': 0.7, 'center_y': 0.29}
     MDLabel:
         text: "Y"
-        pos_hint: {'center_x': 0.9, 'center_y': 0.25}
+        pos_hint: {'center_x': 0.9, 'center_y': 0.21}
     MDTextFieldRect:
         id: y_rotoff
         size_hint: 0.3, None
         height: "30dp"
-        pos_hint: {'center_x': 0.7, 'center_y': 0.25}
+        pos_hint: {'center_x': 0.7, 'center_y': 0.21}
     MDLabel:
         text: "Z"
-        pos_hint: {'center_x': 0.9, 'center_y': 0.15}
+        pos_hint: {'center_x': 0.9, 'center_y': 0.13}
     MDTextFieldRect:
         id: z_rotoff
         size_hint: 0.3, None
         height: "30dp"
-        pos_hint: {'center_x': 0.7, 'center_y': 0.15}
+        pos_hint: {'center_x': 0.7, 'center_y': 0.13}
 
     MDIconButton:
-        icon: "keyboard-backspace"
+        icon: "home"
         on_press:
             root.manager.current = 'menu'
             root.manager.transition.direction = "right"
         pos_hint: {'center_x':0.1, 'center_y':0.05}
         
-<TrackScreen>
-    name: "track"
+    MDRoundFlatIconButton:
+        icon: "run-fast"
+        text: "START"
+        on_press: root.manager.current = 'measure'
+        pos_hint: {'center_x':0.5, 'center_y':0.05}
+        
+    MDNavigationDrawer:
+
 """
+
+class ContentNavigationDrawer(BoxLayout):
+    pass
 
 
 class ContentNavigationDrawer(BoxLayout):
@@ -450,7 +525,7 @@ class DataScreen(Screen):
 
 
 
-class OffsetScreen(Screen):
+class SettingScreen(Screen):
     pass
 
 class MeasurementLayout(MDBoxLayout):
@@ -472,13 +547,4 @@ class DemoApp(MDApp):
 
 if __name__ == "__main__":
     DemoApp().run()
-
-
-
-
-
-
-
-
-
 

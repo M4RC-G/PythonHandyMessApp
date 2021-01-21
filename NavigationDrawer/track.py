@@ -156,8 +156,17 @@ def cumtrapz(y, x=None, dx=1.0, axis=-1, initial=None):
 
 
 
-def calculate_path(path):
-    time, x_acc, y_acc, z_acc, x_rot, y_rot, z_rot = read_csv(path)
+def calculate_track(path="", x_accel=[],y_accel=[], z_accel=[], x_rotat=[], y_rotat=[], z_rotat=[]):
+    if path:
+        time, x_acc, y_acc, z_acc, x_rot, y_rot, z_rot = read_csv(path)
+    else:
+        x_acc = x_accel
+        y_acc = y_accel
+        z_acc = z_accel
+        x_rot = x_rotat
+        y_rot = y_rotat
+        z_rot = z_rotat
+        time = np.linspace(0, 0.05*len(x_acc), len(x_acc))
 
     for i in range(len(time)):
         time[i] = float(time[i])
@@ -214,6 +223,27 @@ def calculate_path(path):
         pos_x.append(float(position[i][0]))
         pos_y.append(float(position[i][1]))
         pos_z.append(float(position[i][2]))
+
+    sumlistX = []
+    sumlistY = []
+    sumlistZ = []
+    sumX = 0
+    sumY = 0
+    sumZ = 0
+    for i in pos_x:
+        sumX += i
+        sumlistX.append(sumX)
+    for i in pos_y:
+        sumY += i
+        sumlistY.append(sumY)
+    for i in pos_x:
+        sumZ += i
+        sumlistZ.append(sumZ)
+
+    for i in range(len(pos_x)):
+        pos_x[i] = sumlistX[i]
+        pos_y[i] = sumlistY[i]
+        pos_z[i] = sumlistZ[i]
 
     return pos_x, pos_y, pos_z
 

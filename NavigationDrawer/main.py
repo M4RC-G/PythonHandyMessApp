@@ -26,6 +26,7 @@ import matplotlib
 matplotlib.use('module://garden_matplotlib.backend_kivy')
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
+import matplot_plot
 
 screen_helper = """
 ScreenManager:
@@ -114,6 +115,7 @@ ScreenManager:
 <MeasureScreen>:
     name: 'measure'
     BoxLayout:
+        id: measurement_layout
         orientation: 'vertical'
         MDToolbar:
             title: '360° ACC Track'
@@ -131,7 +133,7 @@ ScreenManager:
             xmin:0
             xmax:100
             ymin:-15
-            ymax:20
+            ymax:20      
         
         
     MDRoundFlatIconButton:
@@ -174,6 +176,7 @@ ScreenManager:
         text: 'Restore Track'
         pos_hint: {'center_x':0.26, 'center_y':0.13}
         on_press: 
+            root.restore_track()
             root.manager.current = 'track'
             root.manager.transition.direction = "left" 
     MDRectangleFlatButton:
@@ -318,8 +321,6 @@ ScreenManager:
     BoxLayout:
         orientation: 'vertical'
         
-        MDTextField:
-            id: test
 
 """
 
@@ -335,6 +336,8 @@ class MeasureScreen(Screen):
     def __init__(self, **kwargs):
         super(MeasureScreen, self).__init__(**kwargs)
         Clock.schedule_once(self.init)
+        self.disp_plot = False
+        self.started_measurement = False
 
     def init(self, t):
         self.acc_graph = self.ids.graph_plot
@@ -409,12 +412,18 @@ class MeasureScreen(Screen):
     def start_button(self):
         """"Start measurement. Calls init_measurement function and enables the sensors.
             Lists to save values are being cleared and a timer to read the sensor data gets started"""
-        self.init_measurement()
-        if self.manager.screens[3].ids["delay"].active:
-            Clock.schedule_once(self.start_measurement,
-                                float(self.manager.screens[3].ids["delay_value"].text))
-        else:
-            self.start_measurement(t=0)
+        if not self.started_measurement:
+            if self.disp_plot:
+                self.manager.screens[1].ids.measurement_layout.remove_widget(self.plot)
+                self.manager.screens[1].ids["graph_plot"].size_hint_y = 0.8
+                self.manager.screens[1].ids["graph_plot"].height = self.graph_height
+            self.init_measurement()
+            if self.manager.screens[3].ids["delay"].active:
+                Clock.schedule_once(self.start_measurement,
+                                    float(self.manager.screens[3].ids["delay_value"].text))
+            else:
+                self.start_measurement(t=0)
+            self.started_measurement = True
 
     def start_measurement(self, t):
         if self.manager.screens[3].ids["duration"].active:
@@ -441,9 +450,22 @@ class MeasureScreen(Screen):
 
     def stop_measurement(self):
         """"Disable Sensors and unschedule get_sensordata function"""
-        self.gyroscope.disable()
-        self.accelerometer.disable()
-        Clock.unschedule(self.get_sensordata)
+        if self.started_measurement:
+            self.disp_plot = True
+            self.gyroscope.disable()
+            self.accelerometer.disable()
+            Clock.unschedule(self.get_sensordata)
+            self.graph_height = self.manager.screens[1].ids["graph_plot"].height
+            self.manager.screens[1].ids["graph_plot"].size_hint_y = None
+            self.manager.screens[1].ids["graph_plot"].height = "0dp"
+            x_pos, y_pos, z_pos = track.calculate_track(x_accel=self.x_acceleration, y_accel=self.y_acceleration,
+                                                        z_accel=self.z_acceleration, x_rotat=self.x_rotation,
+                                                        y_rotat=self.y_rotation, z_rotat=self.z_rotation)
+
+            self.plot = matplot_plot.Plot3D()
+            self.manager.screens[1].ids.measurement_layout.add_widget(self.plot)
+            self.plot.plot(x_pos, y_pos, z_pos)
+            self.started_measurement = False
 
     def save_data(self):
         """"Saves recorded sensordata to a .csv file named with date and current time"""
@@ -500,7 +522,7 @@ class MeasureScreen(Screen):
         self.counter += 1
 
 
-
+path = ""
 class DataScreen(Screen):
     def __init__(self, **kwargs):
         super(DataScreen, self).__init__(**kwargs)
@@ -510,8 +532,7 @@ class DataScreen(Screen):
         except:
             self.sdpath = MDApp.get_running_app().user_data_dir
         self.sdpath += "/Acc360Track/"
-        self.viewer = FileChooserIconView()
-        self.viewer.id = "filechooser"
+        self.viewer = FileChooserIconView(id="filechooser")
         self.viewer.path = self.sdpath
         if self.init_widget():
             self.add_widget(self.viewer)
@@ -532,6 +553,10 @@ class DataScreen(Screen):
         file_list_entry.children[1].size = ("100dp", "50sp")
         # https://github.com/kivy/kivy/blob/master/kivy/data/style.kv
 
+    def restore_track(self):
+        if self.viewer.selection:
+            global path
+            path = self.viewer.selection[0]
 
 
 
@@ -543,7 +568,11 @@ class TrackScreen(Screen):
         super(TrackScreen, self).__init__(**kwargs)
 
     def on_enter(self):
-        self.test.text = self.manager.screens[2].ids["filechooser"].selection[0]
+        pos_x, pos_y, pos_z = track.calculate_track(path=path)
+        plot = matplot_plot.Plot3D()
+        self.add_widget(plot)
+        plot.plot(pos_x, pos_y, pos_z)
+
 
 class MeasurementLayout(MDBoxLayout):
     pass

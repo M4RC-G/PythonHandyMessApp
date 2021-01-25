@@ -11,6 +11,7 @@ from kivymd.uix.selectioncontrol import MDSwitch
 from kivy.properties import ObjectProperty
 from kivy.properties import StringProperty
 from kivy.uix.filechooser import FileChooserIconView
+from kivy.core.text import markup
 from gyro import AndroidGyroscope
 from linaccel import AndroidLinearAccelerometer
 from kivy.clock import Clock
@@ -114,18 +115,50 @@ ScreenManager:
 
 <MeasureScreen>:
     name: 'measure'
-    BoxLayout:
+    FloatLayout:
         id: measurement_layout
-        orientation: 'vertical'
         MDToolbar:
+            pos_hint: {'center_x':0.5, 'top':1}
             title: '360° ACC Track'
             left_action_items: [["menu", lambda x: nav_drawer.toggle_nav_drawer()]]
             elevation:10
-        
+        Label:
+            id: rot_label
+            text: "Angular Velocity"
+            pos_hint: {"center_x": 0.5, "center_y": 0.7}
+            font_size: "30sp"
+            color: (0, 0, 0, 0.15)
+        Label:
+            id: legend
+            markup: True
+            text: "[color=ff0000]---[/color] x\\n[color=00ff00]---[/color] y\\n[color=0000ff]---[/color] z"
+            pos_hint: {"center_x": 0.92, "center_y": 0.45}
+            font_size: "15sp"
+            color: (0, 0, 0, 0.8)  
         Graph:
-            size_hint_y: 0.8
+            size_hint: (1, 0.4)
+            pos_hint: {"x": 0, "y": 0.5}
+            id: gyro_plot
+            ylabel:'Value'
+            xlabel: "Time"
+            y_grid_label: True
+            x_grid_label: True
+            padding: 5
+            xmin:0
+            xmax:100
+            ymin:-15
+            ymax:20
+            label_options: {"color": (0,0,0,1)}
+        Label:
+            id: acc_label
+            text: "Linear Acceleration"
+            pos_hint: {"center_x": 0.5, "center_y": 0.3}
+            font_size: "30sp"
+            color: (0, 0, 0, 0.15)    
+        Graph:
+            size_hint: (1, 0.4)
+            pos_hint: {"x": 0, "y": 0.1}
             id: graph_plot
-            xlabel:'Time'
             ylabel:'Value'
             y_grid_label: True
             x_grid_label: True
@@ -133,15 +166,15 @@ ScreenManager:
             xmin:0
             xmax:100
             ymin:-15
-            ymax:20      
-        
-        
+            ymax:20
+            label_options: {"color": (0,0,0,1)}      
+                
     MDRoundFlatIconButton:
         icon: "settings"
         text: "Settings"
         on_press: root.manager.current = 'settings'
         pos_hint: {'center_x':0.5, 'center_y':0.05}
-
+       
     MDRectangleFlatButton:
         text: 'Start'
         pos_hint: {'center_x':0.2, 'center_y':0.13}
@@ -153,8 +186,7 @@ ScreenManager:
     MDRectangleFlatButton:
         text: 'Save'
         pos_hint: {'center_x':0.8, 'center_y':0.13}
-        on_press: root.save_data()
-
+        on_press: root.save_data()    
     MDIconButton:
         icon: "home"
         on_press:
@@ -212,38 +244,38 @@ ScreenManager:
         id: delay_value
         size_hint: 0.3, None
         height: "30dp"
-        pos_hint: {'center_x': 0.7, 'center_y': 0.95}
+        pos_hint: {'center_x': 0.7, 'center_y': 0.85}
 
     MDSwitch:
         id: duration
-        pos_hint: {'center_x': 0.1, 'center_y': 0.85}
+        pos_hint: {'center_x': 0.1, 'center_y': 0.78}
     MDLabel:
         text: "Duration in s"
-        pos_hint: {'center_x': 0.7, 'center_y': 0.77}
+        pos_hint: {'center_x': 0.7, 'center_y': 0.78}
     MDTextFieldRect:
         id: duration_value
         size_hint: 0.3, None
         height: "30dp"
-        pos_hint: {'center_x': 0.7, 'center_y': 0.85}
+        pos_hint: {'center_x': 0.7, 'center_y': 0.78}
 
     MDSwitch:
         id: samplingrate
-        pos_hint: {'center_x': 0.1, 'center_y': 0.69}
+        pos_hint: {'center_x': 0.1, 'center_y': 0.78}
     MDLabel:
         text: "samplingrate"
-        pos_hint: {'center_x': 0.7, 'center_y': 0.69}
+        pos_hint: {'center_x': 0.7, 'center_y': 0.71}
     MDTextFieldRect:
+        id: sampling_value
         size_hint: 0.3, None
         height: "30dp"
-        pos_hint: {'center_x': 0.7, 'center_y': 0.69}
+        pos_hint: {'center_x': 0.7, 'center_y': 0.71}
 
     MDSwitch:
         id: offset_lin
-        pos_hint: {'center_x': 0.1, 'center_y': 0.75}
-        pos_hint: {'center_x': 0.7, 'center_y': 0.77}
+        pos_hint: {'center_x': 0.1, 'center_y': 0.64}
     MDLabel:
         text: "Offset Linear"
-        pos_hint: {'center_x': 0.7, 'center_y': 0.61}
+        pos_hint: {'center_x': 0.7, 'center_y': 0.64}
     MDLabel:
         text: "X"
         pos_hint: {'center_x': 0.9, 'center_y': 0.57}
@@ -254,43 +286,43 @@ ScreenManager:
         pos_hint: {'center_x': 0.7, 'center_y': 0.57}
     MDLabel:
         text: "Y"
-        pos_hint: {'center_x': 0.9, 'center_y': 0.49}
+        pos_hint: {'center_x': 0.9, 'center_y': 0.5}
     MDTextFieldRect:
         id: y_linoff
         size_hint: 0.3, None
         height: "30dp"
-        pos_hint: {'center_x': 0.7, 'center_y': 0.49}
+        pos_hint: {'center_x': 0.7, 'center_y': 0.5}
     MDLabel:
         text: "Z"
         pos_hint: {'center_x': 0.9, 'center_y': 0.41}
     MDTextFieldRect:
         id: z_linoff
         size_hint: 0.3, None
-        height: "30dp"
-        pos_hint: {'center_x': 0.7, 'center_y': 0.5}
+        height: "30dp"            
+        pos_hint: {'center_x': 0.7, 'center_y': 0.41}
 
     MDSwitch:
         id: offset_rot
-        pos_hint: {'center_x': 0.1, 'center_y': 0.4}
+        pos_hint: {'center_x': 0.1, 'center_y': 0.34}
     MDLabel:
         text: "Offset Rotatorisch"
-        pos_hint: {'center_x': 0.7, 'center_y': 0.33}
+        pos_hint: {'center_x': 0.7, 'center_y': 0.34}
     MDLabel:
         text: "X"
-        pos_hint: {'center_x': 0.9, 'center_y': 0.29}
+        pos_hint: {'center_x': 0.9, 'center_y': 0.27}
     MDTextFieldRect:
         id: x_rotoff
         size_hint: 0.3, None
         height: "30dp"
-        pos_hint: {'center_x': 0.7, 'center_y': 0.29}
+        pos_hint: {'center_x': 0.7, 'center_y': 0.27}
     MDLabel:
         text: "Y"
-        pos_hint: {'center_x': 0.9, 'center_y': 0.21}
+        pos_hint: {'center_x': 0.9, 'center_y': 0.2}
     MDTextFieldRect:
         id: y_rotoff
         size_hint: 0.3, None
         height: "30dp"
-        pos_hint: {'center_x': 0.7, 'center_y': 0.21}
+        pos_hint: {'center_x': 0.7, 'center_y': 0.2}
     MDLabel:
         text: "Z"
         pos_hint: {'center_x': 0.9, 'center_y': 0.13}
@@ -320,8 +352,13 @@ ScreenManager:
 
     BoxLayout:
         orientation: 'vertical'
-        
-
+    
+    MDIconButton:
+        icon: "keyboard-backspace"
+        on_press:
+            root.manager.current = 'showdata'
+            root.manager.transition.direction = "left"
+        pos_hint: {'center_x':0.1, 'center_y':0.05}
 """
 
 class ContentNavigationDrawer(BoxLayout):
@@ -341,12 +378,18 @@ class MeasureScreen(Screen):
 
     def init(self, t):
         self.acc_graph = self.ids.graph_plot
+        self.rot_graph = self.ids.gyro_plot
 
         # For all X, Y and Z axes
         self.acc_plot = []
         self.acc_plot.append(MeshLinePlot(color=[1, 0, 0, 1]))  # X - Red
         self.acc_plot.append(MeshLinePlot(color=[0, 1, 0, 1]))  # Y - Green
         self.acc_plot.append(MeshLinePlot(color=[0, 0, 1, 1]))  # Z - Blue
+        self.rot_plot = []
+        self.rot_plot.append(MeshLinePlot(color=[1, 0, 0, 1]))  # X - Red
+        self.rot_plot.append(MeshLinePlot(color=[0, 1, 0, 1]))  # Y - Green
+        self.rot_plot.append(MeshLinePlot(color=[0, 0, 1, 1]))  # Z - Blue
+
         request_permissions([Permission.WRITE_EXTERNAL_STORAGE, Permission.READ_EXTERNAL_STORAGE])
         try:
             Environment = autoclass("android.os.Environment")
@@ -359,11 +402,15 @@ class MeasureScreen(Screen):
         self.reset_plots()
         for plot in self.acc_plot:
             self.acc_graph.add_plot(plot)
+        for plot in self.rot_plot:
+            self.rot_graph.add_plot(plot)
 
         self.counter = 1
 
     def reset_plots(self):
         for plot in self.acc_plot:
+            plot.points = [(0, 0)]
+        for plot in self.rot_plot:
             plot.points = [(0, 0)]
 
 
@@ -415,8 +462,13 @@ class MeasureScreen(Screen):
         if not self.started_measurement:
             if self.disp_plot:
                 self.manager.screens[1].ids.measurement_layout.remove_widget(self.plot)
-                self.manager.screens[1].ids["graph_plot"].size_hint_y = 0.8
-                self.manager.screens[1].ids["graph_plot"].height = self.graph_height
+                self.manager.screens[1].ids["graph_plot"].size_hint = (1, 0.4)
+                self.manager.screens[1].ids["graph_plot"].ylabel = "value"
+                self.manager.screens[1].ids["gyro_plot"].size_hint = (1, 0.4)
+                self.manager.screens[1].ids["gyro_plot"].ylabel = "value"
+                self.manager.screens[1].ids["rot_label"].color = (0, 0, 0, 0.15)
+                self.manager.screens[1].ids["acc_label"].color = (0, 0, 0, 0.15)
+                self.manager.screens[1].ids["legend"].color = (0, 0, 0, 0.8)
             self.init_measurement()
             if self.manager.screens[3].ids["delay"].active:
                 Clock.schedule_once(self.start_measurement,
@@ -441,7 +493,12 @@ class MeasureScreen(Screen):
         self.z_rotation.clear()
         self.counter = 1
         self.reset_plots()
-        Clock.schedule_interval(self.get_sensordata, 1 / 20)
+        if self.manager.screens[3].ids["samplingrate"].active:
+            self.samplingrate = float(self.manager.screens[3].ids["sampling_value"].text)
+            Clock.schedule_interval(self.get_sensordata, 1 / self.samplingrate)
+        else:
+            self.samplingrate = 20
+            Clock.schedule_interval(self.get_sensordata, 1 / self.samplingrate)
 
     def stop_measurement_duration(self, t):
         self.gyroscope.disable()
@@ -455,14 +512,20 @@ class MeasureScreen(Screen):
             self.gyroscope.disable()
             self.accelerometer.disable()
             Clock.unschedule(self.get_sensordata)
-            self.graph_height = self.manager.screens[1].ids["graph_plot"].height
-            self.manager.screens[1].ids["graph_plot"].size_hint_y = None
-            self.manager.screens[1].ids["graph_plot"].height = "0dp"
+            self.manager.screens[1].ids["graph_plot"].size_hint = (0, 0)
+            self.manager.screens[1].ids["graph_plot"].ylabel = " "
+            self.manager.screens[1].ids["gyro_plot"].size_hint = (0, 0)
+            self.manager.screens[1].ids["gyro_plot"].ylabel = " "
+            self.manager.screens[1].ids["rot_label"].color = (0, 0, 0, 0)
+            self.manager.screens[1].ids["acc_label"].color = (0, 0, 0, 0)
+            self.manager.screens[1].ids["legend"].color = (0, 0, 0, 0)
             x_pos, y_pos, z_pos = track.calculate_track(x_accel=self.x_acceleration, y_accel=self.y_acceleration,
                                                         z_accel=self.z_acceleration, x_rotat=self.x_rotation,
                                                         y_rotat=self.y_rotation, z_rotat=self.z_rotation)
 
             self.plot = matplot_plot.Plot3D()
+            self.plot.pos_hint = {"center_x:": 0.5, "center_y": 0.53}
+            self.plot.size_hint_y = 0.8
             self.manager.screens[1].ids.measurement_layout.add_widget(self.plot)
             self.plot.plot(x_pos, y_pos, z_pos)
             self.started_measurement = False
@@ -479,7 +542,7 @@ class MeasureScreen(Screen):
                 self.z_acceleration[i]) + "," + str(self.x_rotation[i])
                     + "," + str(self.y_rotation[i]) + "," + str(self.z_rotation[i]))
             f.write("\n")
-            t += 0.05
+            t += 1 / self.samplingrate
 
         f.close()
 
@@ -489,7 +552,9 @@ class MeasureScreen(Screen):
             for plot in self.acc_plot:
                 del (plot.points[0])
                 plot.points[:] = [(i[0] - 1, i[1]) for i in plot.points[:]]
-
+            for plot in self.rot_plot:
+                del (plot.points[0])
+                plot.points[:] = [(i[0] - 1, i[1]) for i in plot.points[:]]
             self.counter = 99
 
         gyro = self.gyroscope.get_rotation()
@@ -514,10 +579,16 @@ class MeasureScreen(Screen):
                 self.x_rotation.append(gyro[0] + self.x_offset_rot)
                 self.y_rotation.append(gyro[1] + self.y_offset_rot)
                 self.z_rotation.append(gyro[2] + self.z_offset_rot)
+                self.rot_plot[0].points.append((self.counter, gyro[0] + self.x_offset_rot))
+                self.rot_plot[1].points.append((self.counter, gyro[1] + self.y_offset_rot))
+                self.rot_plot[2].points.append((self.counter, gyro[2] + self.z_offset_rot))
             else:
                 self.x_rotation.append(gyro[0])
                 self.y_rotation.append(gyro[1])
                 self.z_rotation.append(gyro[2])
+                self.rot_plot[0].points.append((self.counter, gyro[0]))
+                self.rot_plot[1].points.append((self.counter, gyro[1]))
+                self.rot_plot[2].points.append((self.counter, gyro[2]))
 
         self.counter += 1
 

@@ -14,13 +14,13 @@ def read_csv(path):
         reader = csv.reader(file)
         next(reader)
         for row in reader:
-            time.append(row[0])
-            x_acceleration.append(row[1])
-            y_acceleration.append(row[2])
-            z_acceleration.append(row[3])
-            x_rotation.append(row[4])
-            y_rotation.append(row[5])
-            z_rotation.append(row[6])
+            time.append(float(row[0]))
+            x_acceleration.append(float(row[1]))
+            y_acceleration.append(float(row[2]))
+            z_acceleration.append(float(row[3]))
+            x_rotation.append(float(row[4]))
+            y_rotation.append(float(row[5]))
+            z_rotation.append(float(row[6]))
     return time, x_acceleration, y_acceleration, z_acceleration, x_rotation, y_rotation, z_rotation
 
 def integrate(accvals, t):
@@ -172,29 +172,6 @@ def calculate_track(path="", x_accel=[],y_accel=[], z_accel=[], x_rotat=[], y_ro
         time[i] = float(time[i])
     tsim = time[4] - time[3]
 
-
-    for i in range(len(x_acc)):
-        x_acc[i] = float(x_acc[i])
-        y_acc[i] = float(y_acc[i])
-        z_acc[i] = float(z_acc[i])
-        x_rot[i] = float(x_rot[i])
-        y_rot[i] = float(y_rot[i])
-        z_rot[i] = float(z_rot[i])
-
-    x_acc_off = (sum(x_acc) / len(x_acc))
-    y_acc_off = (sum(y_acc) / len(y_acc))
-    z_acc_off = (sum(z_acc) / len(z_acc))
-    x_rot_off = (sum(x_rot) / len(x_rot))
-    y_rot_off = (sum(y_rot) / len(y_rot))
-    z_rot_off = (sum(z_rot) / len(z_rot))
-
-    for i in range(len(x_acc)):
-        x_acc[i] = float(x_acc[i]) - x_acc_off
-        y_acc[i] = float(y_acc[i]) - y_acc_off
-        z_acc[i] = float(z_acc[i]) - z_acc_off
-        x_rot[i] = float(x_rot[i]) - x_rot_off
-        y_rot[i] = float(y_rot[i]) - y_rot_off
-        z_rot[i] = float(z_rot[i]) - z_rot_off
 
     x_acc_filtered = moving_average(x_acc)
     y_acc_filtered = moving_average(y_acc)

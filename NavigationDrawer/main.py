@@ -22,6 +22,7 @@ from android.permissions import request_permissions, Permission
 from kivy.garden.graph import Graph, MeshLinePlot
 from kivymd.app import MDApp
 from kivymd.uix.navigationdrawer import MDNavigationDrawer
+from plyer import accelerometer
 import track
 import matplotlib
 matplotlib.use('module://garden_matplotlib.backend_kivy')
@@ -173,8 +174,16 @@ ScreenManager:
         icon: "settings"
         text: "Settings"
         on_press: root.manager.current = 'settings'
-        pos_hint: {'center_x':0.5, 'center_y':0.05}
-       
+        pos_hint: {'center_x':0.35, 'center_y':0.05}
+    Label:
+        text: "g\\ncompensation"
+        pos_hint: {'center_x':0.73, 'center_y':0.05}
+        color: (0, 0, 0, 0.8)
+        halign: "center" 
+    MDCheckbox
+        id: g_compensation
+        pos_hint: {'center_x':0.9, 'center_y':0.05}
+        active: True
     MDRectangleFlatButton:
         text: 'Start'
         pos_hint: {'center_x':0.2, 'center_y':0.13}

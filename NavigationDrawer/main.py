@@ -29,6 +29,7 @@ matplotlib.use('module://garden_matplotlib.backend_kivy')
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import matplot_plot
+from kivy.properties import ObjectProperty
 
 screen_helper = """
 ScreenManager:
@@ -37,6 +38,78 @@ ScreenManager:
     DataScreen:
     SettingScreen:
     TrackScreen:
+    CalibrationScreen:
+    AboutScreen:
+    HelpScreen:
+
+
+<ContentNavigationDrawer>:
+    orientation: 'vertical'
+
+    Image:
+        source: 'AccTrack.jpeg'
+        size_hint_x: None
+        size_hint_y: None
+        width: 200
+
+    ScrollView:
+        MDList:
+            OneLineAvatarIconListItem:
+                text: 'Start tracking'
+                on_press:
+                    root.nav_drawer.set_state("close")
+                    root.screen_manager.current = "measure"
+                IconLeftWidget:
+                    icon: 'run-fast' 
+            OneLineAvatarIconListItem:
+                text: 'Show logged tracks'
+                on_press:
+                    root.nav_drawer.set_state("close")
+                    root.screen_manager.current = "showdata"
+                IconLeftWidget:
+                    icon: 'database-search'
+            OneLineAvatarIconListItem:
+                text: 'Calibration'
+                on_press:
+                    root.nav_drawer.set_state("close")
+                    root.screen_manager.current = "calibration"
+                IconLeftWidget:
+                    icon: 'target'
+            OneLineAvatarIconListItem:
+                text: 'Settings'
+                on_press:
+                    root.nav_drawer.set_state("close")
+                    root.screen_manager.current = "settings"
+                IconLeftWidget:
+                    icon: 'settings-outline'
+            OneLineAvatarIconListItem:
+                text: 'About'
+                on_press:
+                    root.nav_drawer.set_state("close")
+                    root.screen_manager.current = "about"
+                IconLeftWidget:
+                    icon: 'information-outline'
+            OneLineAvatarIconListItem:
+                text: 'Help'
+                on_press:
+                    root.nav_drawer.set_state("close")
+                    root.screen_manager.current = "help"
+                IconLeftWidget:
+                    icon: 'help-circle-outline'
+
+    Image:
+        source: 'HE_Logo.png'
+        size_hint_x: None
+        size_hint_y: None
+        width: 200
+    MDLabel:
+        text: 'ATB6 ETB6 MTB6 - WS 2020/21'
+        font_style: 'Caption'
+        size_hint_y: None
+        height: self.texture_size[1]
+
+
+
 <MenuScreen>:
     name: 'menu'
     BoxLayout:
@@ -46,73 +119,47 @@ ScreenManager:
             left_action_items: [["menu", lambda x: nav_drawer.toggle_nav_drawer()]]
             elevation:10
         Widget:
+
     MDRectangleFlatButton:
-        text: '             Settings            '
-        icon: 'run-fast'
+        text: 'Settings'
+        icon: 'settings'
+        size_hint_x: 0.4
         pos_hint: {'center_x':0.5, 'center_y':0.25}
         on_press:
             root.manager.current = 'settings'
             root.manager.transition.direction = "left"
     MDRectangleFlatButton:
-        text: '  Show logged data   '
-        icon: 'run-fast'
-        pos_hint: {'center_x':0.5, 'center_y':0.45}
+        text: 'Calibration'
+        icon: 'target'
+        size_hint_x: 0.4
+        pos_hint: {'center_x':0.5, 'center_y':0.4}
+        on_press:
+            root.manager.current = 'calibration'
+            root.manager.transition.direction = "left"
+    MDRectangleFlatButton:
+        text: 'Show logged tracks'
+        icon: 'database'
+        size_hint_x: 0.4
+        pos_hint: {'center_x':0.5, 'center_y':0.55}
         on_press:
             root.manager.current = 'showdata'
             root.manager.transition.direction = "left"
     MDRectangleFlatButton:
-        text: ' Start measurement '
+        text: 'Start tracking'
         icon: 'run-fast'
-        pos_hint: {'center_x':0.5, 'center_y':0.65}
+        size_hint_x: 0.4
+        pos_hint: {'center_x':0.5, 'center_y':0.7}
         on_press: 
             root.manager.current = 'measure'
             root.manager.transition.direction = "left"
-        
+
     MDNavigationDrawer:
         id: nav_drawer
-        
-        orientation: 'vertical'
-        spacing: '8dp'
-        padding: '8dp'
 
-        Image:
-            source: 'AccTrack.jpeg'
-            size_hint_x: None
-            size_hint_y: None
-            width: 200
+        ContentNavigationDrawer:
+            screen_manager: root.manager
+            nav_drawer: nav_drawer
 
-        MDList:
-            OneLineIconListItem:
-                text: 'Start measurement'
-                IconLeftWidget:
-                    icon: 'run-fast'
-                    on_press: root.manager.current = 'measure'
-            OneLineIconListItem:
-                text: 'Show logged data'
-                IconLeftWidget:
-                    icon: 'database-search'
-            OneLineIconListItem:
-                text: 'Settings'
-                IconLeftWidget:
-                    icon: 'settings-outline'
-            OneLineIconListItem:
-                text: 'About'
-                IconLeftWidget:
-                    icon: 'information-outline'
-            OneLineIconListItem:
-                text: 'Help'
-                IconLeftWidget:
-                    icon: 'help-circle-outline'
-
-        Image:
-            source: 'HE_Logo.png'
-            size_hint_x: 0.6
-
-        MDLabel:
-            text: 'ATB6 ETB6 MTB6 - WS 2020/21'
-            font_style: 'Caption'
-            size_hint_y: None
-            height: self.texture_size[1]        
 
 <MeasureScreen>:
     name: 'measure'
@@ -202,9 +249,18 @@ ScreenManager:
             root.manager.current = 'menu'
             root.manager.transition.direction = "right"
         pos_hint: {'center_x':0.1, 'center_y':0.05}
+
+    MDNavigationDrawer:
+        id: nav_drawer
+
+        ContentNavigationDrawer:
+            screen_manager: root.manager
+            nav_drawer: nav_drawer
+
+
 <DataScreen>:
     name: 'showdata'
-    
+
     BoxLayout:
         orientation: 'vertical'
         MDToolbar:
@@ -215,14 +271,12 @@ ScreenManager:
 
     MDRectangleFlatButton:
         text: 'Restore Track'
-        pos_hint: {'center_x':0.26, 'center_y':0.13}
+        pos_hint: {'center_x':0.5, 'center_y':0.13} 
         on_press: 
             root.restore_track()
             root.manager.current = 'track'
             root.manager.transition.direction = "left" 
-    MDRectangleFlatButton:
-        text: 'Restore Values'
-        pos_hint: {'center_x':0.73, 'center_y':0.13} 
+ 
 
     MDIconButton:
         icon: "home"
@@ -230,6 +284,13 @@ ScreenManager:
             root.manager.current = 'menu'
             root.manager.transition.direction = "right"
         pos_hint: {'center_x':0.1, 'center_y':0.05}
+
+    MDNavigationDrawer:
+        id: nav_drawer
+
+        ContentNavigationDrawer:
+            screen_manager: root.manager
+            nav_drawer: nav_drawer
 
 
 <SettingScreen>:
@@ -252,8 +313,11 @@ ScreenManager:
     MDTextFieldRect:
         id: delay_value
         size_hint: 0.3, None
+        multiline: False
+        input_type: 'number'
+        hint_text: '0'
         height: "30dp"
-        pos_hint: {'center_x': 0.7, 'center_y': 0.85}
+        pos_hint: {'center_x': 0.75, 'center_y': 0.85}
 
     MDSwitch:
         id: duration
@@ -266,6 +330,9 @@ ScreenManager:
         size_hint: 0.3, None
         height: "30dp"
         pos_hint: {'center_x': 0.7, 'center_y': 0.78}
+        multiline: False
+        input_type: 'number'
+        hint_text: '0'
 
     MDSwitch:
         id: samplingrate
@@ -278,21 +345,28 @@ ScreenManager:
         size_hint: 0.3, None
         height: "30dp"
         pos_hint: {'center_x': 0.7, 'center_y': 0.71}
+        text: "Samplingrate in Hz"
+        multiline: False
+        input_type: 'number'
+        hint_text: '20'
 
     MDSwitch:
         id: offset_lin
         pos_hint: {'center_x': 0.1, 'center_y': 0.64}
     MDLabel:
-        text: "Offset Linear"
         pos_hint: {'center_x': 0.7, 'center_y': 0.64}
+        text: "Acceleration Offset"
     MDLabel:
-        text: "X"
-        pos_hint: {'center_x': 0.9, 'center_y': 0.57}
+        text: "ax in m/s²"
+        pos_hint: {'center_x': 0.75, 'center_y': 0.57}
     MDTextFieldRect:
         id: x_linoff
         size_hint: 0.3, None
+        multiline: False
+        input_type: 'number'
+        hint_text: '0'
         height: "30dp"
-        pos_hint: {'center_x': 0.7, 'center_y': 0.57}
+        pos_hint: {'center_x': 0.75, 'center_y': 0.57}
     MDLabel:
         text: "Y"
         pos_hint: {'center_x': 0.9, 'center_y': 0.5}
@@ -301,45 +375,60 @@ ScreenManager:
         size_hint: 0.3, None
         height: "30dp"
         pos_hint: {'center_x': 0.7, 'center_y': 0.5}
+        text: "ay in m/s²"
+        multiline: False
+        input_type: 'number'
+        hint_text: '0'
     MDLabel:
-        text: "Z"
-        pos_hint: {'center_x': 0.9, 'center_y': 0.41}
+        text: "az in m/s²"
+        pos_hint: {'center_x': 0.75, 'center_y': 0.41}
     MDTextFieldRect:
         id: z_linoff
         size_hint: 0.3, None
         height: "30dp"            
         pos_hint: {'center_x': 0.7, 'center_y': 0.41}
+        multiline: False
+        input_type: 'number'
+        hint_text: '0'
 
     MDSwitch:
         id: offset_rot
         pos_hint: {'center_x': 0.1, 'center_y': 0.34}
     MDLabel:
-        text: "Offset Rotatorisch"
+        text: "Gyration Offset"
         pos_hint: {'center_x': 0.7, 'center_y': 0.34}
     MDLabel:
-        text: "X"
+        text: "roll rate in °/s"
         pos_hint: {'center_x': 0.9, 'center_y': 0.27}
     MDTextFieldRect:
         id: x_rotoff
-        size_hint: 0.3, None
+        size_hint: 0.25, None
+        multiline: False
+        input_type: 'number'
+        hint_text: '0'
         height: "30dp"
         pos_hint: {'center_x': 0.7, 'center_y': 0.27}
     MDLabel:
-        text: "Y"
+        text: "pitch rate in  °/s"
         pos_hint: {'center_x': 0.9, 'center_y': 0.2}
     MDTextFieldRect:
         id: y_rotoff
-        size_hint: 0.3, None
+        size_hint: 0.25, None
+        multiline: False
+        input_type: 'number'
+        hint_text: '0'
         height: "30dp"
         pos_hint: {'center_x': 0.7, 'center_y': 0.2}
     MDLabel:
-        text: "Z"
-        pos_hint: {'center_x': 0.9, 'center_y': 0.13}
+        text: "yaw rate in °/s"
+        pos_hint: {'center_x': 0.75, 'center_y': 0.13}
     MDTextFieldRect:
         id: z_rotoff
         size_hint: 0.3, None
+        multiline: False
+        hint_text: '0'
         height: "30dp"
-        pos_hint: {'center_x': 0.7, 'center_y': 0.13}
+        pos_hint: {'center_x': 0.75, 'center_y': 0.13}
 
     MDIconButton:
         icon: "home"
@@ -353,8 +442,12 @@ ScreenManager:
         text: "START"
         on_press: root.manager.current = 'measure'
         pos_hint: {'center_x':0.5, 'center_y':0.05}
-        
+
     MDNavigationDrawer:
+        id: nav_drawer
+        ContentNavigationDrawer:
+            screen_manager: root.manager
+            nav_drawer: nav_drawer
 
 <TrackScreen>
     name: 'track'
@@ -368,10 +461,108 @@ ScreenManager:
             root.manager.current = 'showdata'
             root.manager.transition.direction = "left"
         pos_hint: {'center_x':0.1, 'center_y':0.05}
-"""
+    MDNavigationDrawer:
+        id: nav_drawer
+        ContentNavigationDrawer:
+            screen_manager: root.manager
+            nav_drawer: nav_drawer
 
-class ContentNavigationDrawer(BoxLayout):
-    pass
+
+<CalibrationScreen>:
+    name: 'calibration'
+
+    BoxLayout:
+        orientation: 'vertical'
+        MDToolbar:
+            title: '360° ACC Track'
+            left_action_items: [["menu", lambda x: nav_drawer.toggle_nav_drawer()]]
+            elevation:10
+        Widget:
+
+    MDLabel:
+        text: "Place your device on a flat surface and press the Start-button to begin with the calibration!"
+        halign: 'center'
+        font_style: "Subtitle1"
+
+    MDFillRoundFlatIconButton:
+        icon: 'target'
+        text: "Start calibration"
+        pos_hint: {'center_x':0.5, 'center_y':0.4}
+
+    MDIconButton:
+        icon: "home"
+        on_press:
+            root.manager.current = 'menu'
+            root.manager.transition.direction = "right"
+        pos_hint: {'center_x':0.1, 'center_y':0.05}
+
+    MDNavigationDrawer:
+        id: nav_drawer
+
+        ContentNavigationDrawer:
+            screen_manager: root.manager
+            nav_drawer: nav_drawer
+
+
+<AboutScreen>:
+    name: 'about'
+
+    BoxLayout:
+        orientation: 'vertical'
+        MDToolbar:
+            title: '360° ACC Track'
+            left_action_items: [["menu", lambda x: nav_drawer.toggle_nav_drawer()]]
+            elevation:10
+        Widget:
+
+    MDLabel:
+        text: "Projektarbeit: Mechatronisches Projekt"
+        halign: 'center'
+
+    MDIconButton:
+        icon: "home"
+        on_press:
+            root.manager.current = 'menu'
+            root.manager.transition.direction = "right"
+        pos_hint: {'center_x':0.1, 'center_y':0.05}
+
+    MDNavigationDrawer:
+        id: nav_drawer
+
+        ContentNavigationDrawer:
+            screen_manager: root.manager
+            nav_drawer: nav_drawer
+
+
+<HelpScreen>:
+    name: 'help'
+
+    BoxLayout:
+        orientation: 'vertical'
+        MDToolbar:
+            title: '360° ACC Track'
+            left_action_items: [["menu", lambda x: nav_drawer.toggle_nav_drawer()]]
+            elevation:10
+        Widget:
+
+    Image:
+        source: 'Flugzeug.jpeg'
+
+
+    MDIconButton:
+        icon: "home"
+        on_press:
+            root.manager.current = 'menu'
+            root.manager.transition.direction = "right"
+        pos_hint: {'center_x':0.1, 'center_y':0.05}
+
+    MDNavigationDrawer:
+        id: nav_drawer
+
+        ContentNavigationDrawer:
+            screen_manager: root.manager
+            nav_drawer: nav_drawer
+"""
 
 
 class MenuScreen(Screen):
@@ -652,6 +843,30 @@ class TrackScreen(Screen):
         plot = matplot_plot.Plot3D()
         self.add_widget(plot)
         plot.plot(pos_x, pos_y, pos_z)
+class CalibrationScreen(Screen):
+    pass
+
+
+class AboutScreen(Screen):
+    pass
+
+
+class HelpScreen(Screen):
+    pass
+
+
+sm = ScreenManager(id="screen_manager")
+sm.add_widget(MenuScreen(name='menu'))
+sm.add_widget(MeasureScreen(name='measure'))
+sm.add_widget(DataScreen(name='showdata'))
+sm.add_widget(SettingScreen(name='settings'))
+sm.add_widget(CalibrationScreen(name='calibration'))
+sm.add_widget(AboutScreen(name='about'))
+sm.add_widget(HelpScreen(name='help'))
+
+
+class ContentNavigationDrawer(BoxLayout):
+    nav_drawer = ObjectProperty()
 
 
 class MeasurementLayout(MDBoxLayout):

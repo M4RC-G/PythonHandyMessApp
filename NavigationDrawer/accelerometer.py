@@ -1,3 +1,4 @@
+from plyer.facades import Accelerometer
 from jnius import PythonJavaClass, java_method, autoclass, cast
 from plyer.platforms.android import activity
 
@@ -5,7 +6,8 @@ Context = autoclass('android.content.Context')
 Sensor = autoclass('android.hardware.Sensor')
 SensorManager = autoclass('android.hardware.SensorManager')
 
-class LinearAcceleration(PythonJavaClass):
+
+class AccelerometerSensorListener(PythonJavaClass):
     __javainterfaces__ = ['android/hardware/SensorEventListener']
 
     def __init__(self):
@@ -15,15 +17,16 @@ class LinearAcceleration(PythonJavaClass):
             activity.getSystemService(Context.SENSOR_SERVICE)
         )
         self.sensor = self.SensorManager.getDefaultSensor(
-            Sensor.TYPE_LINEAR_ACCELERATION
+            Sensor.TYPE_ACCELEROMETER
         )
 
         self.values = [None, None, None]
 
     def enable(self):
         self.SensorManager.registerListener(
-        self, self.sensor,
-        SensorManager.SENSOR_DELAY_GAME)
+            self, self.sensor,
+            SensorManager.SENSOR_DELAY_NORMAL
+        )
 
     def disable(self):
         self.SensorManager.unregisterListener(self, self.sensor)
@@ -37,14 +40,15 @@ class LinearAcceleration(PythonJavaClass):
         # Maybe, do something in future?
         pass
 
-class AndroidLinearAccelerometer():
+
+class AndroidAccelerometer(Accelerometer):
     def __init__(self):
         #super().__init__()
         self.bState = False
 
     def enable(self):
         if (not self.bState):
-            self.listener = LinearAcceleration()
+            self.listener = AccelerometerSensorListener()
             self.listener.enable()
             self.bState = True
 
@@ -61,9 +65,10 @@ class AndroidLinearAccelerometer():
             return (None, None, None)
 
     def __del__(self):
-        if (self.bState):
+        if(self.bState):
             self._disable()
         #super().__del__()
 
+
 def instance():
-    return AndroidLinearAccelerometer()
+    return AndroidAccelerometer()

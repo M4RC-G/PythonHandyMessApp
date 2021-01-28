@@ -1,35 +1,21 @@
-from kivy.core.window import Window
-from kivy.lang import Builder
-from kivymd.uix.boxlayout import MDBoxLayout
-from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.screenmanager import ScreenManager, Screen
-from kivymd.uix.datatables import MDDataTable
 from kivymd.uix.boxlayout import MDBoxLayout
 from kivy.uix.boxlayout import BoxLayout
-from kivymd.uix.textfield import MDTextFieldRect
-from kivymd.uix.selectioncontrol import MDSwitch
-from kivy.properties import ObjectProperty
-from kivy.properties import StringProperty
 from kivy.uix.filechooser import FileChooserIconView
-from kivy.core.text import markup
 from gyro import AndroidGyroscope
 from linaccel import AndroidLinearAccelerometer
 from kivy.clock import Clock
 from jnius import autoclass
 import datetime
 import os
-from android.permissions import request_permissions, Permission
-from kivy.garden.graph import Graph, MeshLinePlot
+#from android.permissions import request_permissions, Permission
+from kivy.garden.graph import Graph, LinePlot
 from kivymd.app import MDApp
-from kivymd.uix.navigationdrawer import MDNavigationDrawer
 from accelerometer import AndroidAccelerometer
 import track
-import matplotlib
-matplotlib.use('module://garden_matplotlib.backend_kivy')
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
 import matplot_plot
 from kivy.properties import ObjectProperty
+import csv
 
 
 class MenuScreen(Screen):
@@ -49,15 +35,15 @@ class MeasureScreen(Screen):
 
         # For all X, Y and Z axes
         self.acc_plot = []
-        self.acc_plot.append(MeshLinePlot(color=[1, 0, 0, 1]))  # X - Red
-        self.acc_plot.append(MeshLinePlot(color=[0, 1, 0, 1]))  # Y - Green
-        self.acc_plot.append(MeshLinePlot(color=[0, 0, 1, 1]))  # Z - Blue
+        self.acc_plot.append(LinePlot(color=[1, 0, 0, 1], line_width=3))  # X - Red
+        self.acc_plot.append(LinePlot(color=[0, 1, 0, 1], line_width=3))  # Y - Green
+        self.acc_plot.append(LinePlot(color=[0, 0, 1, 1], line_width=3))  # Z - Blue
         self.rot_plot = []
-        self.rot_plot.append(MeshLinePlot(color=[1, 0, 0, 1]))  # X - Red
-        self.rot_plot.append(MeshLinePlot(color=[0, 1, 0, 1]))  # Y - Green
-        self.rot_plot.append(MeshLinePlot(color=[0, 0, 1, 1]))  # Z - Blue
+        self.rot_plot.append(LinePlot(color=[1, 0, 0, 1], line_width=3))  # X - Red
+        self.rot_plot.append(LinePlot(color=[0, 1, 0, 1], line_width=3))  # Y - Green
+        self.rot_plot.append(LinePlot(color=[0, 0, 1, 1], line_width=3))  # Z - Blue
 
-        request_permissions([Permission.WRITE_EXTERNAL_STORAGE, Permission.READ_EXTERNAL_STORAGE])
+        #request_permissions([Permission.WRITE_EXTERNAL_STORAGE, Permission.READ_EXTERNAL_STORAGE])
         try:
             Environment = autoclass("android.os.Environment")
             self.sdpath = Environment.getExternalStorageDirectory().getAbsolutePath()
@@ -153,8 +139,6 @@ class MeasureScreen(Screen):
         if self.manager.screens[3].ids["duration"].active:
             Clock.schedule_once(self.stop_measurement_duration,
                                 float(self.manager.screens[3].ids["duration_value"].text))
-        self.gyroscope.enable()
-        self.accelerometer.enable()
         self.gyroscope.enable()
         self.accelerometer.enable()
         self.x_acceleration.clear()
@@ -308,7 +292,33 @@ class DataScreen(Screen):
 
 
 class SettingScreen(Screen):
-    pass
+    def __init__(self, **kwargs):
+        super(SettingScreen, self).__init__(**kwargs)
+
+    def on_enter(self):
+        try:
+            Environment = autoclass("android.os.Environment")
+            self.sdpath = Environment.getExternalStorageDirectory().getAbsolutePath()
+        except:
+            self.sdpath = MDApp.get_running_app().user_data_dir
+        self.sdpath += "/Acc360Track/Calibration/"
+        try:
+            if self.manager.screens[1].ids["g_compensation"].active:
+                self.sdpath += "Offset_gCompensation.csv"
+            else:
+                self.sdpath += "Offset.csv"
+            with open(self.sdpath, "r") as file:
+                reader = csv.reader(file)
+                next(reader)
+                for row in reader:
+                    self.manager.screens[3].ids["x_linoff"].hint_text = row[0][:15]
+                    self.manager.screens[3].ids["y_linoff"].hint_text = row[1][:15]
+                    self.manager.screens[3].ids["z_linoff"].hint_text = row[2][:15]
+                    self.manager.screens[3].ids["x_rotoff"].hint_text = row[3][:15]
+                    self.manager.screens[3].ids["y_rotoff"].hint_text = row[4][:15]
+                    self.manager.screens[3].ids["z_rotoff"].hint_text = row[5][:15]
+        except OSError:
+            pass
 
 class TrackScreen(Screen):
     def __init__(self, **kwargs):
@@ -319,9 +329,85 @@ class TrackScreen(Screen):
         plot = matplot_plot.Plot3D()
         self.add_widget(plot)
         plot.plot(pos_x, pos_y, pos_z)
-class CalibrationScreen(Screen):
-    pass
 
+class CalibrationScreen(Screen):
+    def __init__(self, **kwargs):
+        super(CalibrationScreen, self).__init__(**kwargs)
+
+    def calibrate(self):
+        self.gyroscope = AndroidGyroscope()
+        if self.manager.screens[5].ids["g_compensation_calibration"].active:
+            self.linear = True
+            self.accelerometer = AndroidLinearAccelerometer()
+        else:
+            self.accelerometer = AndroidLinearAccelerometer()
+            self.linear = False
+        Clock.schedule_once(self.start_calibration, 2)
+        Clock.schedule_once(self.stop_calibration, 12)
+        self.time = 10
+        Clock.schedule_interval(self.disp_time, 1)
+        self.manager.screens[5].ids["calibration_text"].text = "Calibration started.\nPlease dont move the device!"
+        self.manager.screens[5].ids["calibration_button"].disabled = True
+        self.x_rotation = []
+        self.y_rotation = []
+        self.z_rotation = []
+        self.x_acceleration = []
+        self.y_acceleration = []
+        self.z_acceleration = []
+        self.gyroscope.enable()
+        self.accelerometer.enable()
+
+    def start_calibration(self, t):
+        Clock.schedule_interval(self.start_measurement, 1 / 20)
+
+    def start_measurement(self, t):
+        gyro = self.gyroscope.get_rotation()
+        lin = self.accelerometer.get_acceleration()
+
+        if (not lin == (None, None, None) and (not gyro == (None, None, None))):
+            self.x_acceleration.append(lin[0])
+            self.y_acceleration.append(lin[1])
+            self.z_acceleration.append(lin[2])
+            self.x_rotation.append(gyro[0])
+            self.y_rotation.append(gyro[1])
+            self.z_rotation.append(gyro[2])
+
+    def stop_calibration(self, t):
+        Clock.unschedule(self.disp_time)
+        Clock.unschedule(self.start_measurement)
+        x_acc_off = sum(self.x_acceleration) / len(self.x_acceleration)
+        y_acc_off = sum(self.y_acceleration) / len(self.y_acceleration)
+        z_acc_off = sum(self.z_acceleration) / len(self.z_acceleration)
+        x_rot_off = sum(self.x_rotation) / len(self.x_rotation)
+        y_rot_off = sum(self.y_rotation) / len(self.y_rotation)
+        z_rot_off = sum(self.z_rotation) / len(self.z_rotation)
+
+        #request_permissions([Permission.WRITE_EXTERNAL_STORAGE, Permission.READ_EXTERNAL_STORAGE])
+        try:
+            Environment = autoclass("android.os.Environment")
+            self.sdpath = Environment.getExternalStorageDirectory().getAbsolutePath()
+        except:
+            self.sdpath = MDApp.get_running_app().user_data_dir
+        if not os.path.exists(os.path.join(self.sdpath, "Acc360Track/Calibration")):
+            os.mkdir(os.path.join(self.sdpath, "Acc360Track/Calibration"))
+        self.sdpath += "/Acc360Track/Calibration/"
+        if self.linear:
+            f = open(self.sdpath + "Offset_gCompensation.csv", "w+")
+        else:
+            f = open(self.sdpath + "Offset.csv", "w+")
+        f.write("x_acc_offset,y_acc_offset,z_acc_offset,x_rot_offset,y_rot_offset,z_rot_offset\n")
+        f.write(str(x_acc_off) + "," + str(y_acc_off) + "," + str(z_acc_off) + "," + str(x_rot_off)
+                    + "," + str(y_rot_off) + "," + str(z_rot_off))
+        f.close()
+        self.manager.current = "menu"
+        self.manager.screens[5].ids["calibration_button"].disabled = False
+        self.manager.screens[5].ids["calibration_button"].text = "Start Calibration"
+        self.manager.screens[5].ids["calibration_text"].text = "Place your device on a flat surface and press the Start-button to begin with the calibration!"
+
+
+    def disp_time(self, t):
+        self.manager.screens[5].ids["calibration_button"].text = str(self.time)
+        self.time -= 1
 
 class AboutScreen(Screen):
     pass
@@ -338,23 +424,12 @@ class ContentNavigationDrawer(BoxLayout):
 class MeasurementLayout(MDBoxLayout):
     pass
 
+class Screenmanagement(ScreenManager):
+    pass
 
 class AccTrack(MDApp):
     def build(self):
-        screen = Builder.load_file("acctrack.kv")
-        sm = ScreenManager()
-        sm.add_widget(MenuScreen(name='menu'))
-        sm.add_widget(MeasureScreen(name='measure'))
-        sm.add_widget(DataScreen(name='showdata'))
-        sm.add_widget(SettingScreen(name='settings'))
-        sm.add_widget(TrackScreen(name='track'))
-        sm.add_widget(CalibrationScreen(name='calibration'))
-        sm.add_widget(AboutScreen(name='about'))
-        sm.add_widget(HelpScreen(name='help'))
-        return screen
-
-
-
+        return Screenmanagement()
 
 if __name__ == "__main__":
     AccTrack().run()

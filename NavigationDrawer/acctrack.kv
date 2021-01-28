@@ -1,13 +1,21 @@
 #:kivy 1.1.0
-ScreenManager:
+<Screenmanagement>
     MenuScreen:
+        name: "menu"
     MeasureScreen:
+        name: "measure"
     DataScreen:
+        name: "showdata"
     SettingScreen:
+        name: "settings"
     TrackScreen:
+        name: "track"
     CalibrationScreen:
+        name: "calibration"
     AboutScreen:
+        name: "about"
     HelpScreen:
+        name: "help"
 
 
 <ContentNavigationDrawer>:
@@ -145,7 +153,7 @@ ScreenManager:
         Label:
             id: legend
             markup: True
-            text: "[color=ff0000]---[/color] x\\n[color=00ff00]---[/color] y\\n[color=0000ff]---[/color] z"
+            text: "[color=ff0000]---[/color] x\n[color=00ff00]---[/color] y\n[color=0000ff]---[/color] z"
             pos_hint: {"center_x": 0.92, "center_y": 0.45}
             font_size: "15sp"
             color: (0, 0, 0, 0.8)
@@ -189,7 +197,7 @@ ScreenManager:
         on_press: root.manager.current = 'settings'
         pos_hint: {'center_x':0.35, 'center_y':0.05}
     Label:
-        text: "g\\ncompensation"
+        text: "g\ncompensation"
         pos_hint: {'center_x':0.73, 'center_y':0.05}
         color: (0, 0, 0, 0.8)
         halign: "center"
@@ -197,6 +205,7 @@ ScreenManager:
         id: g_compensation
         pos_hint: {'center_x':0.9, 'center_y':0.05}
         active: True
+        size_hint: (0.05, 0.05)
     MDRectangleFlatButton:
         text: 'Start'
         pos_hint: {'center_x':0.2, 'center_y':0.13}
@@ -321,6 +330,7 @@ ScreenManager:
     MDSwitch:
         id: offset_lin
         pos_hint: {'center_x': 0.1, 'center_y': 0.64}
+        active: True
     MDLabel:
         pos_hint: {'center_x': 0.7, 'center_y': 0.64}
         text: "Acceleration Offset"
@@ -336,6 +346,8 @@ ScreenManager:
         height: "30dp"
         pos_hint: {'center_x': 0.7, 'center_y': 0.57}
         halign: "right"
+        max_text_length: 15
+        input_filter: lambda text, from_undo: text[:15 - len(self.text)]
     MDLabel:
         text: "ay [m/s²]"
         pos_hint: {'center_x': 0.7, 'center_y': 0.5}
@@ -348,6 +360,7 @@ ScreenManager:
         input_type: 'number'
         hint_text: '0'
         halign: "right"
+        input_filter: lambda text, from_undo: text[:15 - len(self.text)]
     MDLabel:
         text: "az [m/s²]"
         pos_hint: {'center_x': 0.7, 'center_y': 0.41}
@@ -360,9 +373,12 @@ ScreenManager:
         input_type: 'number'
         hint_text: '0'
         halign: "right"
+        max_text_length: 15
+        input_filter: lambda text, from_undo: text[:15 - len(self.text)]
     MDSwitch:
         id: offset_rot
         pos_hint: {'center_x': 0.1, 'center_y': 0.34}
+        active: True
     MDLabel:
         text: "Gyration Offset"
         pos_hint: {'center_x': 0.7, 'center_y': 0.34}
@@ -378,6 +394,8 @@ ScreenManager:
         height: "30dp"
         pos_hint: {'center_x': 0.7, 'center_y': 0.27}
         halign: "right"
+        max_text_length: 15
+        input_filter: lambda text, from_undo: text[:15 - len(self.text)]
     MDLabel:
         text: "pitch rate [°/s]"
         pos_hint: {'center_x': 0.7, 'center_y': 0.2}
@@ -390,6 +408,8 @@ ScreenManager:
         height: "30dp"
         pos_hint: {'center_x': 0.7, 'center_y': 0.2}
         halign: "right"
+        max_text_length: 15
+        input_filter: lambda text, from_undo: text[:15 - len(self.text)]
     MDLabel:
         text: "yaw rate [°/s]"
         pos_hint: {'center_x': 0.7, 'center_y': 0.13}
@@ -401,6 +421,8 @@ ScreenManager:
         height: "30dp"
         pos_hint: {'center_x': 0.7, 'center_y': 0.13}
         halign: "right"
+        max_text_length: 15
+        input_filter: lambda text, from_undo: text[:15 - len(self.text)]
 
     MDIconButton:
         icon: "home"
@@ -452,14 +474,22 @@ ScreenManager:
         Widget:
 
     MDLabel:
+        id: calibration_text
         text: "Place your device on a flat surface and press the Start-button to begin with the calibration!"
         halign: 'center'
         font_style: "Subtitle1"
 
     MDFillRoundFlatIconButton:
+        id: calibration_button
         icon: 'target'
         text: "Start calibration"
         pos_hint: {'center_x':0.5, 'center_y':0.4}
+        on_press: root.calibrate()
+    MDCheckbox
+        id: g_compensation_calibration
+        pos_hint: {'center_x':0.5, 'center_y':0.2}
+        active: True
+        size_hint: (0.05, 0.05)
 
     MDIconButton:
         icon: "home"
@@ -517,8 +547,8 @@ ScreenManager:
             elevation:10
         Widget:
 
-    Image:
-        source: 'Flugzeug.jpeg'
+    #Image:
+     #   source: 'Flugzeug.jpeg'
 
 
     MDIconButton:

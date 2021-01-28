@@ -1,4 +1,3 @@
-from plyer.facades import Accelerometer
 from jnius import PythonJavaClass, java_method, autoclass, cast
 from plyer.platforms.android import activity
 
@@ -41,7 +40,7 @@ class AccelerometerSensorListener(PythonJavaClass):
         pass
 
 
-class AndroidAccelerometer(Accelerometer):
+class AndroidAccelerometer():
     def __init__(self):
         #super().__init__()
         self.bState = False

@@ -3,7 +3,6 @@ Android Gyroscope
 -----------------
 '''
 
-from plyer.facades import Gyroscope
 from jnius import PythonJavaClass, java_method, autoclass, cast
 from plyer.platforms.android import activity
 
@@ -45,7 +44,7 @@ class GyroscopeSensorListener(PythonJavaClass):
         # Maybe, do something in future?
         pass
 
-class AndroidGyroscope(Gyroscope):
+class AndroidGyroscope():
     def __init__(self):
         #super().__init__()
         self.bState = False
@@ -72,7 +71,7 @@ class AndroidGyroscope(Gyroscope):
     def __del__(self):
         if(self.bState):
             self._disable()
-        super().__del__()
+        #super().__del__()
 
 
 def instance():

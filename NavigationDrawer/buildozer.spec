@@ -4,7 +4,7 @@
 title = AccTrack360°
 
 # (str) Package name
-package.name = DemoApp
+package.name = AccTrack
 
 # (str) Package domain (needed for android/ios packaging)
 package.domain = org.test
@@ -36,7 +36,7 @@ version = 0.1
 
 # (list) Application requirements
 # comma separated e.g. requirements = sqlite3,kivy
-requirements = python3==3.7.5,hostpython3==3.7.5,kivy,pyjnius,android,datetime,kivymd,plyer,numpy,matplotlib
+requirements = python3==3.7.5,hostpython3==3.7.5,kivy==2.0.0,pyjnius,android,kivymd,numpy,matplotlib,plyer
 
 # (str) Custom source folders for requirements
 # Sets custom source for any requirements with recipes
@@ -85,13 +85,13 @@ fullscreen = 0
 #android.presplash_color = #FFFFFF
 
 # (list) Permissions
-#android.permissions = INTERNET
+android.permissions = INTERNET, WRITE_EXTERNAL_STORAGE, READ_EXTERNAL_STORAGE
 
 # (int) Target Android API, should be as high as possible.
-android.api = 21
+#android.api = 21
 
 # (int) Minimum API your APK will support.
-android.minapi = 21
+#android.minapi = 21
 
 # (int) Android SDK version to use
 #android.sdk = 20

@@ -49,7 +49,7 @@ requirements = python3==3.7.5,hostpython3==3.7.5,kivy==2.0.0,pyjnius,android,kiv
 presplash.filename = AccTrack.png
 
 # (str) Icon of the application
-icon.filename = AccTrack.ico
+icon.filename = AccTrackIcon.jpeg
 
 # (str) Supported orientation (one of landscape, sensorLandscape, portrait or all)
 orientation = portrait

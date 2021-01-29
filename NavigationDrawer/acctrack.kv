@@ -153,7 +153,7 @@
         Label:
             id: legend
             markup: True
-            text: "[color=ff0000]---[/color] x\n[color=00ff00]---[/color] y\n[color=0000ff]---[/color] z"
+            text: "[color=00ff00]---[/color] x\n[color=0000ff]---[/color] y\n[color=ff0000]---[/color] z"
             pos_hint: {"center_x": 0.92, "center_y": 0.45}
             font_size: "15sp"
             color: (0, 0, 0, 0.8)
@@ -435,7 +435,12 @@
         icon: "run-fast"
         text: "START"
         on_press: root.manager.current = 'measure'
-        pos_hint: {'center_x':0.5, 'center_y':0.05}
+        pos_hint: {'center_x':0.35, 'center_y':0.05}
+    MDRoundFlatIconButton:
+        icon: "folder"
+        text: "Update track"
+        on_press: root.update_track()
+        pos_hint: {'center_x':0.75, 'center_y':0.05}
 
     MDNavigationDrawer:
         id: nav_drawer
@@ -485,6 +490,11 @@
         text: "Start calibration"
         pos_hint: {'center_x':0.5, 'center_y':0.4}
         on_press: root.calibrate()
+    Label:
+        text: "g\ncompensation"
+        pos_hint: {'center_x':0.5, 'center_y':0.25}
+        color: (0, 0, 0, 0.8)
+        halign: "center"
     MDCheckbox
         id: g_compensation_calibration
         pos_hint: {'center_x':0.5, 'center_y':0.2}
@@ -547,8 +557,8 @@
             elevation:10
         Widget:
 
-    #Image:
-     #   source: 'Flugzeug.jpeg'
+    Image:
+        source: 'axis_device.png'
 
 
     MDIconButton:

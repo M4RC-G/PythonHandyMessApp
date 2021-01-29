@@ -156,7 +156,8 @@ def cumtrapz(y, x=None, dx=1.0, axis=-1, initial=None):
 
 
 
-def calculate_track(path="", x_accel=[],y_accel=[], z_accel=[], x_rotat=[], y_rotat=[], z_rotat=[]):
+def calculate_track(path="", x_accel=[],y_accel=[], z_accel=[], x_rotat=[], y_rotat=[], z_rotat=[], x_acc_off=0,
+                    y_acc_off=0, z_acc_off=0, x_rot_off=0, y_rot_off=0, z_rot_off=0):
     if path:
         time, x_acc, y_acc, z_acc, x_rot, y_rot, z_rot = read_csv(path)
     else:
@@ -172,6 +173,12 @@ def calculate_track(path="", x_accel=[],y_accel=[], z_accel=[], x_rotat=[], y_ro
         time[i] = float(time[i])
     tsim = time[4] - time[3]
 
+    x_acc = [x - x_acc_off for x in x_acc]
+    y_acc = [x - y_acc_off for x in y_acc]
+    z_acc = [x - z_acc_off for x in z_acc]
+    x_rot = [x - x_rot_off for x in x_rot]
+    y_rot = [x - y_rot_off for x in y_rot]
+    z_rot = [x - z_rot_off for x in z_rot]
 
     x_acc_filtered = moving_average(x_acc)
     y_acc_filtered = moving_average(y_acc)

@@ -11,11 +11,10 @@ from kivy.clock import Clock
 class Plot3D(BoxLayout):
     def __init__(self, **kwargs):
         super(Plot3D, self).__init__(**kwargs)
-        fig = plt.figure()
-        self.ax = fig.gca(projection="3d")
+        self.fig = plt.figure()
+        self.ax = self.fig.gca(projection="3d")
         self.ax.plot([],[],[])
-        self.mpl_canvas = fig.canvas
-        #plt.axis("off")
+        self.mpl_canvas = self.fig.canvas
         self.add_widget(self.mpl_canvas)
 
     def plot(self,x ,y ,z):
@@ -25,7 +24,8 @@ class Plot3D(BoxLayout):
         #self.ax.plot(y, z,  zdir='x', zs=-0.5)
         #self.ax.plot(x, y,  zdir='z', zs=-1.5)
 
-        self.mpl_canvas.draw()
+
+        self.mpl_canvas.draw_idle()
 
 
 

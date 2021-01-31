@@ -29,14 +29,14 @@ def integrate(accvals, t):
     return position
 
 
-def moving_average(data, window=10):
+def moving_average(data, window=5):
     cumsum_vec = np.cumsum(np.insert(data, 0, 0))
     ma_vec = (cumsum_vec[window:] - cumsum_vec[:-window]) / window
     return ma_vec
 
 
 
-def rotation_matrix(x, y, z, vx, vy, vz):
+def rotation_matrix(x,y,z,vx,vy,vz):
     pos = []
     for i in range(len(x)):
         xangle = vx[i]
@@ -51,19 +51,19 @@ def rotation_matrix(x, y, z, vx, vy, vz):
             disty = y[i] - y[i - 1]
             distz = z[i] - z[i - 1]
         RX = np.array([[1, 0, 0],
-                       [0, math.cos(xangle), -math.sin(xangle)],
-                       [0, math.sin(xangle), math.cos(xangle)]])
+              [0, math.cos(xangle), -math.sin(xangle)],
+                [0, math.sin(xangle), math.cos(xangle)]])
         RY = np.array([[math.cos(yangle), 0, math.sin(yangle)],
-                       [0, 1, 0],
-                       [-math.sin(yangle), 0, math.cos(yangle)]])
+              [0, 1, 0],
+              [-math.sin(yangle), 0, math.cos(yangle)]])
         RZ = np.array([[math.cos(zangle), -math.sin(zangle), 0],
-                       [math.sin(zangle), math.cos(zangle), 0],
-                       [0, 0, 1]])
+              [math.sin(zangle), math.cos(zangle), 0],
+              [0, 0, 1]])
         R = RX.dot(RZ.dot(RY))
         R = np.squeeze(np.asarray(R))
         vector = np.array([[distx],
-                           [disty],
-                           [distz]])
+                  [disty],
+                  [distz]])
         coordinates = R.dot(vector)
         pos.append(coordinates)
     return pos

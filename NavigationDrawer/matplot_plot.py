@@ -18,7 +18,8 @@ class Plot3D(BoxLayout):
         self.add_widget(self.mpl_canvas)
 
     def plot(self,x ,y ,z):
-        self.ax.plot(x, y, z)
+        self.ax.view_init(20, 45)
+        self.ax.plot(x, y, z, linewidth=10)
 
         #self.ax.plot(x, z,  zdir='y', zs=1.5)
         #self.ax.plot(y, z,  zdir='x', zs=-0.5)

@@ -23,9 +23,9 @@
 
     Image:
         source: 'AccTrack.jpeg'
-        size_hint_x: None
-        size_hint_y: None
-        width: 200
+        pos_hint: {'center_x':0.5, 'center_y':0.9}
+        size_hint: (1, 0.3)
+        allow_stretch: True
 
     ScrollView:
         MDList:
@@ -74,9 +74,9 @@
 
     Image:
         source: 'HE_Logo.png'
-        size_hint_x: None
-        size_hint_y: None
-        width: 200
+        pos_hint: {'center_x':0.5, 'center_y':0.5}
+        size_hint: (0.8, 0.2)
+        allow_stretch: True
     MDLabel:
         text: 'ATB6 ETB6 MTB6 - WS 2020/21'
         font_style: 'Caption'
@@ -279,12 +279,26 @@
             elevation:10
         Widget:
 
+    MDLabel:
+        text: "Samplingrate [Hz]"
+        pos_hint: {'center_x': 0.7, 'center_y': 0.85}
+    MDTextFieldRect:
+        id: sampling_value
+        size_hint: 0.3, None
+        height: "30dp"
+        pos_hint: {'center_x': 0.7, 'center_y': 0.85}
+        multiline: False
+        input_type: 'number'
+        hint_text: '20'
+        halign: "right"
+        input_filter: "int"
     MDSwitch:
         id: delay
-        pos_hint: {'center_x': 0.1, 'center_y': 0.85}
+        pos_hint: {'center_x': 0.1, 'center_y': 0.78}
+
     MDLabel:
         text: "Delay [s]"
-        pos_hint: {'center_x': 0.7, 'center_y': 0.85}
+        pos_hint: {'center_x': 0.7, 'center_y': 0.78}
     MDTextFieldRect:
         id: delay_value
         size_hint: 0.3, None
@@ -293,39 +307,25 @@
         hint_text: '0'
         height: "30dp"
         halign: "right"
-        pos_hint: {'center_x': 0.7, 'center_y': 0.85}
+        pos_hint: {'center_x': 0.7, 'center_y': 0.78}
+        input_filter: "float"
 
     MDSwitch:
         id: duration
-        pos_hint: {'center_x': 0.1, 'center_y': 0.78}
+        pos_hint: {'center_x': 0.1, 'center_y': 0.71}
     MDLabel:
         text: "Duration [s]"
-        pos_hint: {'center_x': 0.7, 'center_y': 0.78}
+        pos_hint: {'center_x': 0.7, 'center_y': 0.71}
     MDTextFieldRect:
         id: duration_value
         size_hint: 0.3, None
         height: "30dp"
-        pos_hint: {'center_x': 0.7, 'center_y': 0.78}
+        pos_hint: {'center_x': 0.7, 'center_y': 0.71}
         multiline: False
         input_type: 'number'
         hint_text: '0'
         halign: "right"
-
-    MDSwitch:
-        id: samplingrate
-        pos_hint: {'center_x': 0.1, 'center_y': 0.71}
-    MDLabel:
-        text: "Samplingrate [Hz]"
-        pos_hint: {'center_x': 0.7, 'center_y': 0.71}
-    MDTextFieldRect:
-        id: sampling_value
-        size_hint: 0.3, None
-        height: "30dp"
-        pos_hint: {'center_x': 0.7, 'center_y': 0.71}
-        multiline: False
-        input_type: 'number'
-        hint_text: '20'
-        halign: "right"
+        input_filter: "float"
 
     MDSwitch:
         id: offset_lin
@@ -348,6 +348,7 @@
         halign: "right"
         max_text_length: 15
         input_filter: lambda text, from_undo: text[:15 - len(self.text)]
+        input_filter: "float"
     MDLabel:
         text: "ay [m/s²]"
         pos_hint: {'center_x': 0.7, 'center_y': 0.5}
@@ -361,6 +362,7 @@
         hint_text: '0'
         halign: "right"
         input_filter: lambda text, from_undo: text[:15 - len(self.text)]
+        input_filter: "float"
     MDLabel:
         text: "az [m/s²]"
         pos_hint: {'center_x': 0.7, 'center_y': 0.41}
@@ -375,6 +377,7 @@
         halign: "right"
         max_text_length: 15
         input_filter: lambda text, from_undo: text[:15 - len(self.text)]
+        input_filter: "float"
     MDSwitch:
         id: offset_rot
         pos_hint: {'center_x': 0.1, 'center_y': 0.34}
@@ -396,6 +399,7 @@
         halign: "right"
         max_text_length: 15
         input_filter: lambda text, from_undo: text[:15 - len(self.text)]
+        input_filter: "float"
     MDLabel:
         text: "pitch rate [°/s]"
         pos_hint: {'center_x': 0.7, 'center_y': 0.2}
@@ -410,6 +414,7 @@
         halign: "right"
         max_text_length: 15
         input_filter: lambda text, from_undo: text[:15 - len(self.text)]
+        input_filter: "float"
     MDLabel:
         text: "yaw rate [°/s]"
         pos_hint: {'center_x': 0.7, 'center_y': 0.13}
@@ -423,7 +428,7 @@
         halign: "right"
         max_text_length: 15
         input_filter: lambda text, from_undo: text[:15 - len(self.text)]
-
+        input_filter: "float"
     MDIconButton:
         icon: "home"
         on_press:
@@ -559,6 +564,9 @@
 
     Image:
         source: 'axis_device.png'
+        pos_hint: {'center_x':0.5, 'center_y':0.5}
+        size_hint: (0.4, 0.4)
+        allow_stretch: True
 
 
     MDIconButton:

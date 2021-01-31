@@ -46,7 +46,7 @@ requirements = python3==3.7.5,hostpython3==3.7.5,kivy==2.0.0,pyjnius,android,kiv
 #garden_requirements =
 
 # (str) Presplash of the application
-presplash.filename = AccTrack.png
+presplash.filename = LoadingScreen.jpeg
 
 # (str) Icon of the application
 icon.filename = AccTrackIcon.jpeg
@@ -85,7 +85,7 @@ fullscreen = 0
 #android.presplash_color = #FFFFFF
 
 # (list) Permissions
-android.permissions = INTERNET, WRITE_EXTERNAL_STORAGE, READ_EXTERNAL_STORAGE
+android.permissions = INTERNET
 
 # (int) Target Android API, should be as high as possible.
 #android.api = 21

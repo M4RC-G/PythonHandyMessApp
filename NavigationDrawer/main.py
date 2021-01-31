@@ -8,7 +8,7 @@ from kivy.clock import Clock
 from jnius import autoclass
 import datetime
 import os
-# from android.permissions import request_permissions, Permission
+from android.permissions import request_permissions, Permission
 from kivy.garden.graph import Graph, LinePlot
 from kivymd.app import MDApp
 from accelerometer import AndroidAccelerometer
@@ -32,6 +32,7 @@ class MeasureScreen(Screen):
         Clock.schedule_once(self.init)
         self.disp_plot = False
         self.started_measurement = False
+        request_permissions([Permission.WRITE_EXTERNAL_STORAGE, Permission.READ_EXTERNAL_STORAGE])
 
     def init(self, t):
         self.acc_graph = self.ids.graph_plot
@@ -47,15 +48,20 @@ class MeasureScreen(Screen):
         self.rot_plot.append(LinePlot(color=[0, 0, 1, 1], line_width=3))  # Y - Blue
         self.rot_plot.append(LinePlot(color=[1, 0, 0, 1], line_width=3))  # Z - Red
 
-        # request_permissions([Permission.WRITE_EXTERNAL_STORAGE, Permission.READ_EXTERNAL_STORAGE])
         try:
             Environment = autoclass("android.os.Environment")
             self.sdpath = Environment.getExternalStorageDirectory().getAbsolutePath()
         except:
             self.sdpath = MDApp.get_running_app().user_data_dir
-        if not os.path.exists(os.path.join(self.sdpath, "Acc360Track")):
-            os.mkdir(os.path.join(self.sdpath, "Acc360Track"))
-        self.sdpath += "/Acc360Track/"
+        if not os.path.exists(os.path.join(self.sdpath, "Acc360Track/Data")):
+            os.mkdir(os.path.join(self.sdpath, "Acc360Track/Data"))
+        if not os.path.exists(os.path.join(self.sdpath, "Acc360Track/Data/without_g_compensation")):
+            os.mkdir(os.path.join(self.sdpath, "Acc360Track/Data/without_g_compensation"))
+        if not os.path.exists(os.path.join(self.sdpath, "Acc360Track/Data/with_g_compensation")):
+            os.mkdir(os.path.join(self.sdpath, "Acc360Track/Data/with_g_compensation"))
+        self.compensated_path = self.sdpath + "/Acc360Track/Data/with_g_compensation/"
+        self.sdpath += "/Acc360Track/Data/without_g_compensation/"
+
         self.reset_plots()
         for plot in self.acc_plot:
             self.acc_graph.add_plot(plot)
@@ -156,7 +162,7 @@ class MeasureScreen(Screen):
         self.z_rotation.clear()
         self.counter = 1
         self.reset_plots()
-        if self.manager.screens[3].ids["samplingrate"].active:
+        if self.manager.screens[3].ids["sampling_value"].text:
             self.samplingrate = float(self.manager.screens[3].ids["sampling_value"].text)
             Clock.schedule_interval(self.get_sensordata, 1 / self.samplingrate)
         else:
@@ -200,19 +206,23 @@ class MeasureScreen(Screen):
 
     def save_data(self):
         """"Saves recorded sensordata to a .csv file named with date and current time"""
-        time = datetime.datetime.now()
-        time = time.strftime("%Y%m%d_%H%M%S")
-        f = open(self.sdpath + time + ".csv", "w+")
-        f.write("t[s],ax[m/s2],ay[m/s2],az[m/s2],\u03C9x[rad/s],\u03C9y[rad/s],\u03C9z[rad/s]\n")
-        t = 0
-        for i in range(len(self.x_acceleration)):
-            f.write(str(t) + "," + str(self.x_acceleration[i]) + "," + str(self.y_acceleration[i]) + "," + str(
-                self.z_acceleration[i]) + "," + str(self.x_rotation[i])
-                    + "," + str(self.y_rotation[i]) + "," + str(self.z_rotation[i]))
-            f.write("\n")
-            t += 1 / self.samplingrate
+        if recorded_track:
+            time = datetime.datetime.now()
+            time = time.strftime("%Y%m%d_%H%M%S")
+            if self.compensation:
+                f = open(self.compensated_path + time + ".csv", "w+")
+            else:
+                f = open(self.sdpath + time + ".csv", "w+")
+            f.write("t[s],ax[m/s2],ay[m/s2],az[m/s2],\u03C9x[rad/s],\u03C9y[rad/s],\u03C9z[rad/s]\n")
+            t = 0
+            for i in range(len(self.x_acceleration)):
+                f.write(str(t) + "," + str(self.x_acceleration[i]) + "," + str(self.y_acceleration[i]) + "," + str(
+                    self.z_acceleration[i]) + "," + str(self.x_rotation[i])
+                        + "," + str(self.y_rotation[i]) + "," + str(self.z_rotation[i]))
+                f.write("\n")
+                t += 1 / self.samplingrate
 
-        f.close()
+            f.close()
 
     def get_sensordata(self, t):
         """Reads sensordata and appends them to the corresponding list every time the function gets called"""
@@ -323,7 +333,7 @@ class DataScreen(Screen):
             self.sdpath = Environment.getExternalStorageDirectory().getAbsolutePath()
         except:
             self.sdpath = MDApp.get_running_app().user_data_dir
-        self.sdpath += "/Acc360Track/"
+        self.sdpath += "/Acc360Track/Data/"
         self.viewer = FileChooserIconView()
         self.viewer.id = "filechooser"
         self.viewer.path = self.sdpath
@@ -348,7 +358,7 @@ class DataScreen(Screen):
         if self.viewer.selection:
             global path
             path = self.viewer.selection[0]
-            TrackScreen.restore_track()
+            self.manager.screens[4].restore_track()
             global selected_track
             selected_track = True
 
@@ -456,7 +466,7 @@ class CalibrationScreen(Screen):
             self.linear = True
             self.accelerometer = AndroidLinearAccelerometer()
         else:
-            self.accelerometer = AndroidLinearAccelerometer()
+            self.accelerometer = AndroidAccelerometer()
             self.linear = False
         Clock.schedule_once(self.start_calibration, 2)
         Clock.schedule_once(self.stop_calibration, 12)
@@ -498,7 +508,8 @@ class CalibrationScreen(Screen):
         y_rot_off = sum(self.y_rotation) / len(self.y_rotation)
         z_rot_off = sum(self.z_rotation) / len(self.z_rotation)
 
-        # request_permissions([Permission.WRITE_EXTERNAL_STORAGE, Permission.READ_EXTERNAL_STORAGE])
+        if not self.linear:
+            z_acc_off -= 9.81
         try:
             Environment = autoclass("android.os.Environment")
             self.sdpath = Environment.getExternalStorageDirectory().getAbsolutePath()

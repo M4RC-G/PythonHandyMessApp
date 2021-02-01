@@ -23,11 +23,13 @@ class MenuScreen(Screen):
     pass
 
 
-recorded_track = False
+recorded_track = False     #bool value used in update_track function to detect if a track was recorded
 
 
 class MeasureScreen(Screen):
     def __init__(self, **kwargs):
+        """schedules int function to make sure the widget tree is loaded correctly and ids are available. Also permissions
+        to read and write from the """
         super(MeasureScreen, self).__init__(**kwargs)
         Clock.schedule_once(self.init)
         self.disp_plot = False
@@ -333,13 +335,18 @@ class DataScreen(Screen):
             self.sdpath = Environment.getExternalStorageDirectory().getAbsolutePath()
         except:
             self.sdpath = MDApp.get_running_app().user_data_dir
-        self.sdpath += "/Acc360Track/Data/"
+        self.sdpath += "/Acc360Track/Data/with_g_compensation/"
         self.viewer = FileChooserIconView()
+        self.viewer.pos_hint = {"center_x": 0.5, "center_y": 0.55}
+        self.viewer.size_hint = (1, 0.8)
         self.viewer.id = "filechooser"
         self.viewer.path = self.sdpath
         if self.init_widget():
             self.add_widget(self.viewer)
 
+    def on_enter(self):
+        self.viewer.path = self.sdpath
+        self.viewer._update_files()
     def init_widget(self, *args):
         fc = self.viewer
         fc.bind(on_entry_added=self.update_file_list_entry)
@@ -351,7 +358,7 @@ class DataScreen(Screen):
         file_list_entry.children[1].color = (0.0, 0.0, 0.0, 1.0)  # Dir Names`
         file_list_entry.children[1].font_size = ("14sp")
         file_list_entry.children[1].shorten = False
-        file_list_entry.children[1].size = ("100dp", "50sp")
+        file_list_entry.children[1].size = ("100dp", "40sp")
         # https://github.com/kivy/kivy/blob/master/kivy/data/style.kv
 
     def restore_track(self):
@@ -383,12 +390,12 @@ class SettingScreen(Screen):
                 reader = csv.reader(file)
                 next(reader)
                 for row in reader:
-                    self.manager.screens[3].ids["x_linoff"].hint_text = row[0][:15]
-                    self.manager.screens[3].ids["y_linoff"].hint_text = row[1][:15]
-                    self.manager.screens[3].ids["z_linoff"].hint_text = row[2][:15]
-                    self.manager.screens[3].ids["x_rotoff"].hint_text = row[3][:15]
-                    self.manager.screens[3].ids["y_rotoff"].hint_text = row[4][:15]
-                    self.manager.screens[3].ids["z_rotoff"].hint_text = row[5][:15]
+                    self.manager.screens[3].ids["x_linoff"].hint_text = row[0][:10]
+                    self.manager.screens[3].ids["y_linoff"].hint_text = row[1][:10]
+                    self.manager.screens[3].ids["z_linoff"].hint_text = row[2][:10]
+                    self.manager.screens[3].ids["x_rotoff"].hint_text = row[3][:10]
+                    self.manager.screens[3].ids["y_rotoff"].hint_text = row[4][:10]
+                    self.manager.screens[3].ids["z_rotoff"].hint_text = row[5][:10]
         except OSError:
             pass
 
@@ -553,10 +560,6 @@ class HelpScreen(Screen):
 
 
 class ContentNavigationDrawer(BoxLayout):
-    pass
-
-
-class MeasurementLayout(MDBoxLayout):
     pass
 
 

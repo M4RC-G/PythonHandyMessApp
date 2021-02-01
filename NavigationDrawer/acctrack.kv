@@ -1,0 +1,596 @@
+#:kivy 1.1.0
+<Screenmanagement>
+    MenuScreen:
+        name: "menu"
+    MeasureScreen:
+        name: "measure"
+    DataScreen:
+        name: "showdata"
+    SettingScreen:
+        name: "settings"
+    TrackScreen:
+        name: "track"
+    CalibrationScreen:
+        name: "calibration"
+    AboutScreen:
+        name: "about"
+    HelpScreen:
+        name: "help"
+
+
+<ContentNavigationDrawer>:
+    orientation: 'vertical'
+
+    Image:
+        source: 'AccTrack.jpeg'
+        pos_hint: {'center_x':0.5, 'center_y':0.9}
+        size_hint: (1, 0.3)
+        allow_stretch: True
+
+    ScrollView:
+        MDList:
+            OneLineAvatarIconListItem:
+                text: 'Start tracking'
+                on_press:
+                    root.nav_drawer.set_state("close")
+                    root.screen_manager.current = "measure"
+                IconLeftWidget:
+                    icon: 'run-fast'
+            OneLineAvatarIconListItem:
+                text: 'Show logged tracks'
+                on_press:
+                    root.nav_drawer.set_state("close")
+                    root.screen_manager.current = "showdata"
+                IconLeftWidget:
+                    icon: 'database-search'
+            OneLineAvatarIconListItem:
+                text: 'Calibration'
+                on_press:
+                    root.nav_drawer.set_state("close")
+                    root.screen_manager.current = "calibration"
+                IconLeftWidget:
+                    icon: 'target'
+            OneLineAvatarIconListItem:
+                text: 'Settings'
+                on_press:
+                    root.nav_drawer.set_state("close")
+                    root.screen_manager.current = "settings"
+                IconLeftWidget:
+                    icon: 'settings-outline'
+            OneLineAvatarIconListItem:
+                text: 'About'
+                on_press:
+                    root.nav_drawer.set_state("close")
+                    root.screen_manager.current = "about"
+                IconLeftWidget:
+                    icon: 'information-outline'
+            OneLineAvatarIconListItem:
+                text: 'Help'
+                on_press:
+                    root.nav_drawer.set_state("close")
+                    root.screen_manager.current = "help"
+                IconLeftWidget:
+                    icon: 'help-circle-outline'
+
+    Image:
+        source: 'HE_Logo.png'
+        pos_hint: {'center_x':0.5, 'center_y':0.5}
+        size_hint: (0.8, 0.2)
+        allow_stretch: True
+    MDLabel:
+        text: 'ATB6 ETB6 MTB6 - WS 2020/21'
+        font_style: 'Caption'
+        size_hint_y: None
+
+
+
+<MenuScreen>:
+    name: 'menu'
+    BoxLayout:
+        orientation: 'vertical'
+        MDToolbar:
+            title: '360° ACC Track'
+            left_action_items: [["menu", lambda x: nav_drawer.toggle_nav_drawer()]]
+            elevation:10
+        Widget:
+
+    MDRectangleFlatButton:
+        text: 'Settings'
+        icon: 'settings'
+        size_hint: (0.4, 0.06)
+        pos_hint: {'center_x':0.5, 'center_y':0.25}
+        on_press:
+            root.manager.current = 'settings'
+            root.manager.transition.direction = "left"
+    MDRectangleFlatButton:
+        text: 'Calibration'
+        icon: 'target'
+        size_hint: (0.4, 0.06)
+        pos_hint: {'center_x':0.5, 'center_y':0.4}
+        on_press:
+            root.manager.current = 'calibration'
+            root.manager.transition.direction = "left"
+    MDRectangleFlatButton:
+        text: 'Show logged tracks'
+        icon: 'database'
+        size_hint: (0.4, 0.06)
+        pos_hint: {'center_x':0.5, 'center_y':0.55}
+        on_press:
+            root.manager.current = 'showdata'
+            root.manager.transition.direction = "left"
+    MDRectangleFlatButton:
+        text: 'Start tracking'
+        icon: 'run-fast'
+        size_hint: (0.4, 0.06)
+        pos_hint: {'center_x':0.5, 'center_y':0.7}
+        on_press:
+            root.manager.current = 'measure'
+            root.manager.transition.direction = "left"
+
+    MDNavigationDrawer:
+        id: nav_drawer
+
+        ContentNavigationDrawer:
+            screen_manager: root.manager
+            nav_drawer: nav_drawer
+
+
+<MeasureScreen>:
+    name: 'measure'
+    FloatLayout:
+        id: measurement_layout
+        MDToolbar:
+            pos_hint: {'center_x':0.5, 'top':1}
+            title: '360° ACC Track'
+            left_action_items: [["menu", lambda x: nav_drawer.toggle_nav_drawer()]]
+            elevation:10
+        Label:
+            id: rot_label
+            text: "Angular Velocity"
+            pos_hint: {"center_x": 0.5, "center_y": 0.7}
+            font_size: "30sp"
+            color: (0, 0, 0, 0.15)
+        Label:
+            id: legend
+            markup: True
+            text: "[color=00ff00]---[/color] x\n[color=0000ff]---[/color] y\n[color=ff0000]---[/color] z"
+            pos_hint: {"center_x": 0.92, "center_y": 0.45}
+            font_size: "15sp"
+            color: (0, 0, 0, 0.8)
+        Graph:
+            size_hint: (1, 0.4)
+            pos_hint: {"x": 0, "y": 0.5}
+            id: gyro_plot
+            ylabel:'Value'
+            xlabel: "Time"
+            y_grid_label: True
+            x_grid_label: True
+            padding: 5
+            xmin:0
+            xmax:100
+            ymin:-15
+            ymax:20
+            label_options: {"color": (0,0,0,1)}
+        Label:
+            id: acc_label
+            text: "Linear Acceleration"
+            pos_hint: {"center_x": 0.5, "center_y": 0.3}
+            font_size: "30sp"
+            color: (0, 0, 0, 0.15)
+        Graph:
+            size_hint: (1, 0.4)
+            pos_hint: {"x": 0, "y": 0.1}
+            id: graph_plot
+            ylabel:'Value'
+            y_grid_label: True
+            x_grid_label: True
+            padding: 5
+            xmin:0
+            xmax:100
+            ymin:-15
+            ymax:20
+            label_options: {"color": (0,0,0,1)}
+
+    MDRoundFlatIconButton:
+        icon: "settings"
+        text: "Settings"
+        on_press: root.manager.current = 'settings'
+        pos_hint: {'center_x':0.35, 'center_y':0.05}
+    Label:
+        text: "g\ncompensation"
+        pos_hint: {'center_x':0.73, 'center_y':0.05}
+        color: (0, 0, 0, 0.8)
+        halign: "center"
+    MDCheckbox
+        id: g_compensation
+        pos_hint: {'center_x':0.9, 'center_y':0.05}
+        active: True
+        size_hint: (0.05, 0.05)
+    MDRectangleFlatButton:
+        text: 'Start'
+        pos_hint: {'center_x':0.2, 'center_y':0.13}
+        on_press: root.start_button()
+    MDRectangleFlatButton:
+        text: 'Stop'
+        pos_hint: {'center_x':0.5, 'center_y':0.13}
+        on_press: root.stop_measurement()
+    MDRectangleFlatButton:
+        text: 'Save'
+        pos_hint: {'center_x':0.8, 'center_y':0.13}
+        on_press: root.save_data()
+    MDIconButton:
+        icon: "home"
+        on_press:
+            root.manager.current = 'menu'
+            root.manager.transition.direction = "right"
+        pos_hint: {'center_x':0.1, 'center_y':0.05}
+
+    MDNavigationDrawer:
+        id: nav_drawer
+
+        ContentNavigationDrawer:
+            screen_manager: root.manager
+            nav_drawer: nav_drawer
+
+
+<DataScreen>:
+    name: 'showdata'
+
+    BoxLayout:
+        orientation: 'horizontal'
+        MDToolbar:
+            title: '360° ACC Track'
+            left_action_items: [["menu", lambda x: nav_drawer.toggle_nav_drawer()]]
+            elevation:10
+            pos_hint: {"top": 1}
+
+    MDRectangleFlatButton:
+        text: 'Restore Track'
+        pos_hint: {'center_x':0.5, 'center_y':0.13}
+        on_press:
+            root.restore_track()
+            root.manager.current = 'track'
+            root.manager.transition.direction = "left"
+
+
+    MDIconButton:
+        icon: "home"
+        on_press:
+            root.manager.current = 'menu'
+            root.manager.transition.direction = "right"
+        pos_hint: {'center_x':0.1, 'center_y':0.05}
+
+    MDNavigationDrawer:
+        id: nav_drawer
+
+        ContentNavigationDrawer:
+            screen_manager: root.manager
+            nav_drawer: nav_drawer
+
+
+<SettingScreen>:
+    name: 'settings'
+
+    BoxLayout:
+        orientation: 'vertical'
+        MDToolbar:
+            title: '360° ACC Track'
+            left_action_items: [["menu", lambda x: nav_drawer.toggle_nav_drawer()]]
+            elevation:10
+        Widget:
+
+    MDLabel:
+        text: "Samplingrate [Hz]"
+        pos_hint: {'center_x': 0.7, 'center_y': 0.85}
+    MDTextFieldRect:
+        id: sampling_value
+        size_hint: 0.3, None
+        height: "30dp"
+        pos_hint: {'center_x': 0.7, 'center_y': 0.85}
+        multiline: False
+        input_type: 'number'
+        hint_text: '20'
+        halign: "right"
+        input_filter: "int"
+    MDSwitch:
+        id: delay
+        pos_hint: {'center_x': 0.1, 'center_y': 0.78}
+
+    MDLabel:
+        text: "Delay [s]"
+        pos_hint: {'center_x': 0.7, 'center_y': 0.78}
+    MDTextFieldRect:
+        id: delay_value
+        size_hint: 0.3, None
+        multiline: False
+        input_type: 'number'
+        hint_text: '0'
+        height: "30dp"
+        halign: "right"
+        pos_hint: {'center_x': 0.7, 'center_y': 0.78}
+        input_filter: "float"
+
+    MDSwitch:
+        id: duration
+        pos_hint: {'center_x': 0.1, 'center_y': 0.71}
+    MDLabel:
+        text: "Duration [s]"
+        pos_hint: {'center_x': 0.7, 'center_y': 0.71}
+    MDTextFieldRect:
+        id: duration_value
+        size_hint: 0.3, None
+        height: "30dp"
+        pos_hint: {'center_x': 0.7, 'center_y': 0.71}
+        multiline: False
+        input_type: 'number'
+        hint_text: '0'
+        halign: "right"
+        input_filter: "float"
+
+    MDSwitch:
+        id: offset_lin
+        pos_hint: {'center_x': 0.1, 'center_y': 0.64}
+        active: True
+    MDLabel:
+        pos_hint: {'center_x': 0.7, 'center_y': 0.64}
+        text: "Acceleration Offset"
+    MDLabel:
+        text: "ax [m/s²]"
+        pos_hint: {'center_x': 0.7, 'center_y': 0.57}
+    MDTextFieldRect:
+        id: x_linoff
+        size_hint: 0.3, None
+        multiline: False
+        input_type: 'number'
+        hint_text: '0'
+        height: "30dp"
+        pos_hint: {'center_x': 0.7, 'center_y': 0.57}
+        halign: "right"
+        max_text_length: 15
+        input_filter: lambda text, from_undo: text[:15 - len(self.text)]
+        input_filter: "float"
+    MDLabel:
+        text: "ay [m/s²]"
+        pos_hint: {'center_x': 0.7, 'center_y': 0.5}
+    MDTextFieldRect:
+        id: y_linoff
+        size_hint: 0.3, None
+        height: "30dp"
+        pos_hint: {'center_x': 0.7, 'center_y': 0.5}
+        multiline: False
+        input_type: 'number'
+        hint_text: '0'
+        halign: "right"
+        input_filter: lambda text, from_undo: text[:15 - len(self.text)]
+        input_filter: "float"
+    MDLabel:
+        text: "az [m/s²]"
+        pos_hint: {'center_x': 0.7, 'center_y': 0.41}
+    MDTextFieldRect:
+        id: z_linoff
+        size_hint: 0.3, None
+        height: "30dp"
+        pos_hint: {'center_x': 0.7, 'center_y': 0.41}
+        multiline: False
+        input_type: 'number'
+        hint_text: '0'
+        halign: "right"
+        max_text_length: 15
+        input_filter: lambda text, from_undo: text[:15 - len(self.text)]
+        input_filter: "float"
+    MDSwitch:
+        id: offset_rot
+        pos_hint: {'center_x': 0.1, 'center_y': 0.34}
+        active: True
+    MDLabel:
+        text: "Gyration Offset"
+        pos_hint: {'center_x': 0.7, 'center_y': 0.34}
+    MDLabel:
+        text: "roll rate [°/s]"
+        pos_hint: {'center_x': 0.7, 'center_y': 0.27}
+    MDTextFieldRect:
+        id: x_rotoff
+        size_hint: 0.3, None
+        multiline: False
+        input_type: 'number'
+        hint_text: '0'
+        height: "30dp"
+        pos_hint: {'center_x': 0.7, 'center_y': 0.27}
+        halign: "right"
+        max_text_length: 15
+        input_filter: lambda text, from_undo: text[:15 - len(self.text)]
+        input_filter: "float"
+    MDLabel:
+        text: "pitch rate [°/s]"
+        pos_hint: {'center_x': 0.7, 'center_y': 0.2}
+    MDTextFieldRect:
+        id: y_rotoff
+        size_hint: 0.3, None
+        multiline: False
+        input_type: 'number'
+        hint_text: '0'
+        height: "30dp"
+        pos_hint: {'center_x': 0.7, 'center_y': 0.2}
+        halign: "right"
+        max_text_length: 15
+        input_filter: lambda text, from_undo: text[:15 - len(self.text)]
+        input_filter: "float"
+    MDLabel:
+        text: "yaw rate [°/s]"
+        pos_hint: {'center_x': 0.7, 'center_y': 0.13}
+    MDTextFieldRect:
+        id: z_rotoff
+        size_hint: 0.3, None
+        multiline: False
+        hint_text: '0'
+        height: "30dp"
+        pos_hint: {'center_x': 0.7, 'center_y': 0.13}
+        halign: "right"
+        max_text_length: 15
+        input_filter: lambda text, from_undo: text[:15 - len(self.text)]
+        input_filter: "float"
+    MDIconButton:
+        icon: "home"
+        on_press:
+            root.manager.current = 'menu'
+            root.manager.transition.direction = "right"
+        pos_hint: {'center_x':0.1, 'center_y': 0.05}
+
+    MDRoundFlatIconButton:
+        icon: "run-fast"
+        text: "START"
+        on_press: root.manager.current = 'measure'
+        pos_hint: {'center_x':0.35, 'center_y':0.05}
+    MDRoundFlatIconButton:
+        icon: "folder"
+        text: "Update track"
+        on_press: root.update_track()
+        pos_hint: {'center_x':0.75, 'center_y':0.05}
+
+    MDNavigationDrawer:
+        id: nav_drawer
+        ContentNavigationDrawer:
+            screen_manager: root.manager
+            nav_drawer: nav_drawer
+
+<TrackScreen>
+    name: 'track'
+
+    BoxLayout:
+        orientation: 'vertical'
+
+    MDIconButton:
+        icon: "keyboard-backspace"
+        on_press:
+            root.manager.current = 'showdata'
+            root.manager.transition.direction = "left"
+        pos_hint: {'center_x':0.1, 'center_y':0.05}
+    MDNavigationDrawer:
+        id: nav_drawer
+        ContentNavigationDrawer:
+            screen_manager: root.manager
+            nav_drawer: nav_drawer
+
+
+<CalibrationScreen>:
+    name: 'calibration'
+
+    BoxLayout:
+        orientation: 'vertical'
+        MDToolbar:
+            title: '360° ACC Track'
+            left_action_items: [["menu", lambda x: nav_drawer.toggle_nav_drawer()]]
+            elevation:10
+        Widget:
+
+    MDLabel:
+        id: calibration_text
+        text: "Place your device on a flat surface and press the Start-button to begin with the calibration!"
+        halign: 'center'
+        font_style: "Subtitle1"
+
+    MDFillRoundFlatIconButton:
+        id: calibration_button
+        icon: 'target'
+        text: "Start calibration"
+        pos_hint: {'center_x':0.5, 'center_y':0.4}
+        on_press: root.calibrate()
+    Label:
+        text: "g\ncompensation"
+        pos_hint: {'center_x':0.5, 'center_y':0.25}
+        color: (0, 0, 0, 0.8)
+        halign: "center"
+    MDCheckbox
+        id: g_compensation_calibration
+        pos_hint: {'center_x':0.5, 'center_y':0.2}
+        active: True
+        size_hint: (0.05, 0.05)
+
+    MDIconButton:
+        icon: "home"
+        on_press:
+            root.manager.current = 'menu'
+            root.manager.transition.direction = "right"
+        pos_hint: {'center_x':0.1, 'center_y':0.05}
+
+    MDNavigationDrawer:
+        id: nav_drawer
+
+        ContentNavigationDrawer:
+            screen_manager: root.manager
+            nav_drawer: nav_drawer
+
+
+<AboutScreen>:
+    name: 'about'
+
+    BoxLayout:
+        orientation: 'vertical'
+        MDToolbar:
+            title: '360° ACC Track'
+            left_action_items: [["menu", lambda x: nav_drawer.toggle_nav_drawer()]]
+            elevation:10
+        Widget:
+
+    MDLabel:
+        text: "Hochschule Esslingen\n\nModul 601: Mechatronisches Projekt\n\nHandy-Mess-App\n\n\n\nDaniel Reith\nMarko Blazanovic\nElijon Murati\nChristian Greising\nMarc Glaser\n\nunter Betreuung von\nProf. Minuth"
+        halign: 'center'
+
+    MDIconButton:
+        icon: "home"
+        on_press:
+            root.manager.current = 'menu'
+            root.manager.transition.direction = "right"
+        pos_hint: {'center_x':0.1, 'center_y':0.05}
+
+    MDNavigationDrawer:
+        id: nav_drawer
+
+        ContentNavigationDrawer:
+            screen_manager: root.manager
+            nav_drawer: nav_drawer
+
+
+<HelpScreen>:
+    name: 'help'
+
+    BoxLayout:
+        orientation: 'vertical'
+        MDToolbar:
+            title: '360° ACC Track'
+            left_action_items: [["menu", lambda x: nav_drawer.toggle_nav_drawer()]]
+            elevation:10
+        BoxLayout:
+            orientation: "horizontal"
+            size_hint: (1, 0.3)
+            Image:
+                source: 'axis_device.png'
+                pos_hint: {'center_x':0.25, 'center_y':0.4}
+                allow_stretch: True
+            MDLabel:
+                markup: True
+                pos_hint: {'center_x':0.75, 'center_y':0.4}
+                text: "[b]Device coordinate system: [/b]\n\nWhen a device is held in its default orientation: \n - The X-axis is horizontal and points to the right \n - The Y-axis is vertical and points up \n - The Z-axis is perpendicular to the face of the sceen"
+        ScrollView:            
+            MDLabel:
+                padding_x: 20
+                text: '\nOPERATION MANUAL:\n\nTo get to the navigation bar, press the three stripes in the upper left corner. To get to the home screen, press the HOME-button in the lower left corner. Both buttons are available in every part of this application.\n\nBefore starting, go to the ‘Calibration’ page and calibrate your device. Make sure to place your device on a flat surface. Avoid any contact with the device and make sure the device doesn´t move until the process is finished\n\nTo start a measurement, go to the ‘Start tracking’ page and press the ‘START’-button. During the measurement, the angular velocity and the linear acceleration of the X-, Y- and Z- Axis should be visible on your display.\nTo finish the tracking, press the ‘STOP’-button. Now the whole track of your movement should appear on the display.\nMake sure to save the track by pressing the ‘SAVE’-button before starting a new measurement, otherwise it will be overwritten.\nTo add the g compensation to your tracking, activate the checkbox in the lower right corner before starting the measurement.\nTo activate a starting delay or to set a duration of your measurement, go to the ‘Settings’ page. Activate the switch of the option you want to choose and set a starting value or/and the duration value\n\nTo view your previously measured tracks, go to the ‘Show logged data’ page. By choosing a measurement and pressing the ‘Restore Track’-button, your chosen track will be displayed. To go back, press the return-button of your device.\n\nOn the ‘Settings’ page you can activate, deactivate, or change settings like the sampling rate and the offsets of acceleration or gyration. You can reach the ‘Settings’ page from the navigation bar, the home screen, or directly from the ‘Start tracking’ page.\nTo change the sampling rate, press on the text field and the preferred value in Hertz.\nTo activate an acceleration Offset or a gyration Offset, turn on the related switch and type in the chosen values.'
+                text_color: "Custom"
+                
+                size_hint_y: None
+                height: self.texture_size[1]
+
+
+    MDIconButton:
+        icon: "home"
+        on_press:
+            root.manager.current = 'menu'
+            root.manager.transition.direction = "right"
+        pos_hint: {'center_x':0.1, 'center_y':0.05}
+
+    MDNavigationDrawer:
+        id: nav_drawer
+
+        ContentNavigationDrawer:
+            screen_manager: root.manager
+            nav_drawer: nav_drawer

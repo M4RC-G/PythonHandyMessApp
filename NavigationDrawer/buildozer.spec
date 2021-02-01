@@ -13,7 +13,7 @@ package.domain = org.test
 source.dir = .
 
 # (list) Source files to include (let empty to include all the files)
-source.include_exts = py,png,jpg,kv,atlas,jpeg,ico
+source.include_exts = py,png,jpg,kv,atlas,jpeg
 
 # (list) List of inclusions using pattern matching
 #source.include_patterns = assets/*,images/*.png
@@ -28,7 +28,7 @@ source.include_exts = py,png,jpg,kv,atlas,jpeg,ico
 #source.exclude_patterns = license,images/*/*.jpg
 
 # (str) Application versioning (method 1)
-version = 0.1
+version = 1.0
 
 # (str) Application versioning (method 2)
 # version.regex = __version__ = ['"](.*)['"]
@@ -46,7 +46,7 @@ requirements = python3==3.7.5,hostpython3==3.7.5,kivy==2.0.0,pyjnius,android,kiv
 #garden_requirements =
 
 # (str) Presplash of the application
-presplash.filename = LoadingScreen.jpeg
+presplash.filename = AccTrack.jpeg
 
 # (str) Icon of the application
 icon.filename = AccTrackIcon.jpeg

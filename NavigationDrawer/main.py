@@ -1,5 +1,4 @@
 from kivy.uix.screenmanager import ScreenManager, Screen
-from kivymd.uix.boxlayout import MDBoxLayout
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.filechooser import FileChooserIconView
 from gyro import AndroidGyroscope
@@ -14,22 +13,22 @@ from kivymd.app import MDApp
 from accelerometer import AndroidAccelerometer
 import track
 import matplot_plot
-from kivy.properties import ObjectProperty
 import csv
 from kivy.core.window import Window
 
 
+recorded_track = False     #global bool value used in update_track function to detect if a track was recorded previously
+path = ""                  #global variable used to get the path of the on the DataScreen Selected File to the TrackScreen
+selected_track = False     #global bool value used in update_track function to detect if a track was selected previously
+sdpath = ""                #global variable for default path
+
 class MenuScreen(Screen):
     pass
 
-
-recorded_track = False     #bool value used in update_track function to detect if a track was recorded
-
-
 class MeasureScreen(Screen):
     def __init__(self, **kwargs):
-        """schedules int function to make sure the widget tree is loaded correctly and ids are available. Also permissions
-        to read and write from the """
+        """schedules init function to make sure the widget tree is loaded correctly and its ids are available. Also
+        permissions to read and write from the devices storage"""
         super(MeasureScreen, self).__init__(**kwargs)
         Clock.schedule_once(self.init)
         self.disp_plot = False
@@ -37,6 +36,9 @@ class MeasureScreen(Screen):
         request_permissions([Permission.WRITE_EXTERNAL_STORAGE, Permission.READ_EXTERNAL_STORAGE])
 
     def init(self, t):
+        """The actual init function for this screen. Both graph plots are instantiated from the corresponding ids in the
+         kv file and three LinePlots with different colors are added to each. Also the default path to save data is saved
+         and if the folders needed for saving the apps data are not existent already they are created."""
         self.acc_graph = self.ids.graph_plot
         self.rot_graph = self.ids.gyro_plot
 
@@ -49,20 +51,20 @@ class MeasureScreen(Screen):
         self.rot_plot.append(LinePlot(color=[0, 1, 0, 1], line_width=3))  # X - Green
         self.rot_plot.append(LinePlot(color=[0, 0, 1, 1], line_width=3))  # Y - Blue
         self.rot_plot.append(LinePlot(color=[1, 0, 0, 1], line_width=3))  # Z - Red
-
+        global sdpath
         try:
             Environment = autoclass("android.os.Environment")
-            self.sdpath = Environment.getExternalStorageDirectory().getAbsolutePath()
+            sdpath = Environment.getExternalStorageDirectory().getAbsolutePath()
         except:
-            self.sdpath = MDApp.get_running_app().user_data_dir
-        if not os.path.exists(os.path.join(self.sdpath, "Acc360Track/Data")):
-            os.mkdir(os.path.join(self.sdpath, "Acc360Track/Data"))
-        if not os.path.exists(os.path.join(self.sdpath, "Acc360Track/Data/without_g_compensation")):
-            os.mkdir(os.path.join(self.sdpath, "Acc360Track/Data/without_g_compensation"))
-        if not os.path.exists(os.path.join(self.sdpath, "Acc360Track/Data/with_g_compensation")):
-            os.mkdir(os.path.join(self.sdpath, "Acc360Track/Data/with_g_compensation"))
-        self.compensated_path = self.sdpath + "/Acc360Track/Data/with_g_compensation/"
-        self.sdpath += "/Acc360Track/Data/without_g_compensation/"
+            sdpath = MDApp.get_running_app().user_data_dir
+        if not os.path.exists(os.path.join(sdpath, "Acc360Track/Data")):
+            os.mkdir(os.path.join(sdpath, "Acc360Track/Data"))
+        if not os.path.exists(os.path.join(sdpath, "Acc360Track/Data/without_g_compensation")):
+            os.mkdir(os.path.join(sdpath, "Acc360Track/Data/without_g_compensation"))
+        if not os.path.exists(os.path.join(sdpath, "Acc360Track/Data/with_g_compensation")):
+            os.mkdir(os.path.join(sdpath, "Acc360Track/Data/with_g_compensation"))
+        self.compensated_path = sdpath + "/Acc360Track/Data/with_g_compensation/"
+        self.sdpath = sdpath + "/Acc360Track/Data/without_g_compensation/"
 
         self.reset_plots()
         for plot in self.acc_plot:
@@ -73,14 +75,17 @@ class MeasureScreen(Screen):
         self.counter = 1
 
     def reset_plots(self):
+        """function used to reset the acceleration and gyration plots"""
         for plot in self.acc_plot:
             plot.points = [(0, 0)]
         for plot in self.rot_plot:
             plot.points = [(0, 0)]
 
     def init_measurement(self):
-        """"Request Permissions to write, set path to save files, instantiate sensors and
-            create empty lists to save sensor values"""
+        """"function called at start of each measurement. If the user has specified some offset values on the SettingScreen
+        those are saved in local variable for later use. Empty Lists for each sensor value are created. Depending on
+        whether the g_compensation checkbox is activated the right acceleration sensor type is instantiated. Gyroscope
+        is also instantiated."""
         self.linoffset = False
         self.rotoffset = False
         if self.manager.screens[3].ids["offset_lin"].active:
@@ -126,8 +131,10 @@ class MeasureScreen(Screen):
         self.gyroscope = AndroidGyroscope()
 
     def start_button(self):
-        """"Start measurement. Calls init_measurement function and enables the sensors.
-            Lists to save values are being cleared and a timer to read the sensor data gets started"""
+        """"Function called when start button is pressed. If theres already a measurement in progress nothing happens.
+        If not the correct widgets for live data plots are shown and the init_measurement function is called.
+        Also the start_measurement function is called. If a delay is specified and the corresponding switch is set on
+        the SettingScreen the function gets called with this delay"""
         if not self.started_measurement:
             if self.disp_plot:
                 self.manager.screens[1].ids.measurement_layout.remove_widget(self.plot)
@@ -151,6 +158,12 @@ class MeasureScreen(Screen):
             selected_track = False
 
     def start_measurement(self, t):
+        """Function to start the actual measurement. If a value for the duration of the measurement is set on the
+        SettingScreen the stop_mesaurement_duration function is scheduled to be called after this time. Both, acceleration and
+        gyroscope sensors are enabled and the lists used to save the sensor values are cleared, to get rid of values from
+        previous measurements. Also the reset_plots funtion is called. A Clock function is scheduled, to call the
+        get_sensordata cyclically with the on the SettingScreen defined sampling rate. If none is defined the default
+        value is used"""
         if self.manager.screens[3].ids["duration"].active:
             Clock.schedule_once(self.stop_measurement_duration,
                                 float(self.manager.screens[3].ids["duration_value"].text))
@@ -172,12 +185,15 @@ class MeasureScreen(Screen):
             Clock.schedule_interval(self.get_sensordata, 1 / self.samplingrate)
 
     def stop_measurement_duration(self, t):
-        self.gyroscope.disable()
-        self.accelerometer.disable()
-        Clock.unschedule(self.get_sensordata)
+        """Calls stop_measurement function after a specified time."""
+        self.stop_measurement()
 
     def stop_measurement(self):
-        """"Disable Sensors and unschedule get_sensordata function"""
+        """"Function called after pressing the stop button. If no measurement was done before nothing happens. Else
+        The for the measurement used sensors are disabled and the get_sensordata function is unscheduled.
+        If a measurement with g-compensation was performed, the acceleration and gyroscope plots are hidden and the
+        track is calculated from the recorded values. To display this track a new Plot3D widget is instantiated, which
+        gets added to the current screen layout."""
         if self.started_measurement:
             self.gyroscope.disable()
             self.accelerometer.disable()
@@ -207,7 +223,8 @@ class MeasureScreen(Screen):
             recorded_track = True
 
     def save_data(self):
-        """"Saves recorded sensordata to a .csv file named with date and current time"""
+        """"Saves recorded sensordata to a .csv file named with date and current time. Different folders are used for
+        compensated and non-compensated data."""
         if recorded_track:
             time = datetime.datetime.now()
             time = time.strftime("%Y%m%d_%H%M%S")
@@ -227,7 +244,11 @@ class MeasureScreen(Screen):
             f.close()
 
     def get_sensordata(self, t):
-        """Reads sensordata and appends them to the corresponding list every time the function gets called"""
+        """Function to read sensor data from the Android system. Therefore the current values are saved and appended
+        to the corresponding list. If offset values are specified those are subtracted from the measured values before
+        they are saved. To display the sensor data the values are also added to both plots. To make sure that all values
+        can be displayed theres a counter which deletes the oldest value from the plot and displays the newest when 100
+        values are reached."""
         if (self.counter == 100):
             for plot in self.acc_plot:
                 del (plot.points[0])
@@ -273,6 +294,9 @@ class MeasureScreen(Screen):
         self.counter += 1
 
     def update_track(self):
+        """This function is called when the Update track button on the SettingScreen is pressed and previously a
+        track was recorded. The old widget is removed and a new track is calculated with the changed offset values
+        which gets shown afterwards."""
         self.manager.screens[1].ids.measurement_layout.remove_widget(self.plot)
         if self.manager.screens[3].ids["offset_lin"].active:
             self.linoffset = True
@@ -323,19 +347,13 @@ class MeasureScreen(Screen):
         self.manager.screens[1].ids.measurement_layout.add_widget(self.plot)
         self.plot.plot(pos_x, pos_y, pos_z)
 
-path = ""
-selected_track = False
-
 
 class DataScreen(Screen):
     def __init__(self, **kwargs):
+        """init function for DataScreen. Path to g-compensated files is set and a FileChooserIconView Widget is instantiated
+        and added to the layout."""
         super(DataScreen, self).__init__(**kwargs)
-        try:
-            Environment = autoclass("android.os.Environment")
-            self.sdpath = Environment.getExternalStorageDirectory().getAbsolutePath()
-        except:
-            self.sdpath = MDApp.get_running_app().user_data_dir
-        self.sdpath += "/Acc360Track/Data/with_g_compensation/"
+        self.sdpath = sdpath + "/Acc360Track/Data/with_g_compensation/"
         self.viewer = FileChooserIconView()
         self.viewer.pos_hint = {"center_x": 0.5, "center_y": 0.55}
         self.viewer.size_hint = (1, 0.8)
@@ -345,23 +363,32 @@ class DataScreen(Screen):
             self.add_widget(self.viewer)
 
     def on_enter(self):
+        """Function called everytime the user switches to this screen. Files are updated to make sure all recorded tracks
+        are displayed"""
         self.viewer.path = self.sdpath
         self.viewer._update_files()
+
     def init_widget(self, *args):
+        """Function to make sure each entry in the FileChooser is displayed as wanted. Therefore update_file_list_entry
+        is called for every file"""
         fc = self.viewer
         fc.bind(on_entry_added=self.update_file_list_entry)
         fc.bind(on_subentry_to_entry=self.update_file_list_entry)
         return True
 
     def update_file_list_entry(self, file_chooser, file_list_entry, *args):
+        """function to customize the look of FileChooserIconView Widget. As the default text color is white this needs
+        to be changed for each file. Also each elements size is adjusted. For customization options see
+        https://github.com/kivy/kivy/blob/master/kivy/data/style.kv"""
         file_list_entry.children[0].color = (0.0, 0.0, 0.0, 1.0)  # File Names
         file_list_entry.children[1].color = (0.0, 0.0, 0.0, 1.0)  # Dir Names`
         file_list_entry.children[1].font_size = ("14sp")
         file_list_entry.children[1].shorten = False
         file_list_entry.children[1].size = ("100dp", "40sp")
-        # https://github.com/kivy/kivy/blob/master/kivy/data/style.kv
 
     def restore_track(self):
+        """Function called when the Restore track button is pressed. If a file is selected The restore_track function
+        on TrackScreen is called to display the track."""
         if self.viewer.selection:
             global path
             path = self.viewer.selection[0]
@@ -371,16 +398,15 @@ class DataScreen(Screen):
 
 
 class SettingScreen(Screen):
+    """Screen to adjust settings like samplingrate, delay, duration and offsets. Most of the settings will
+        be done in the *.kv file, here we just change the calibration values at the hint text parameter of the text input."""
     def __init__(self, **kwargs):
         super(SettingScreen, self).__init__(**kwargs)
 
     def on_enter(self):
-        try:
-            Environment = autoclass("android.os.Environment")
-            self.sdpath = Environment.getExternalStorageDirectory().getAbsolutePath()
-        except:
-            self.sdpath = MDApp.get_running_app().user_data_dir
-        self.sdpath += "/Acc360Track/Calibration/"
+        """If the user enters the settings page, the actual calibration data will be loaded as hint text into the
+        offset textfields. """
+        self.sdpath = sdpath + "/Acc360Track/Calibration/"
         try:
             if self.manager.screens[1].ids["g_compensation"].active:
                 self.sdpath += "Offset_gCompensation.csv"
@@ -400,6 +426,8 @@ class SettingScreen(Screen):
             pass
 
     def update_track(self):
+        """Depending on the user navigation, from where he wanted to upgrade the track, the screen manager navigates
+        back to the right screen"""
         if selected_track:
             self.manager.screens[4].update_track()
             self.manager.current = "track"
@@ -409,16 +437,23 @@ class SettingScreen(Screen):
 
 
 class TrackScreen(Screen):
+    """The Track Screen shows the measured values plotted as an 3D plot."""
     def __init__(self, **kwargs):
         super(TrackScreen, self).__init__(**kwargs)
 
     def restore_track(self):
+        """from the stored position values, we can calculte a matplot 3D track by adding a plot widget"""
         pos_x, pos_y, pos_z = track.calculate_track(path=path)
         self.plot = matplot_plot.Plot3D()
         self.add_widget(self.plot)
         self.plot.plot(pos_x, pos_y, pos_z)
 
     def update_track(self):
+        """update an already stored track with customized offset values.
+            If the linear offset switch of settings screen is active, it takes the text of the particular textfield
+            or if the text is empty, it takes the hint text (calibration values). If the linear offset switch is inactive
+            then there will be written zeros instead. Same for Gyration offset.
+            After that the track will be plotted with updated values."""
         if self.manager.screens[3].ids["offset_lin"].active:
             self.linoffset = True
             if self.manager.screens[3].ids["x_linoff"].text:
@@ -463,11 +498,15 @@ class TrackScreen(Screen):
 
 
 class CalibrationScreen(Screen):
+    """Calibration screen: calibrate the sensors of the smartphone and automatically adjust the offset settings"""
     def __init__(self, **kwargs):
         super(CalibrationScreen, self).__init__(**kwargs)
         Window.bind(on_keyboard=self.onBackBtn)
 
     def calibrate(self):
+        """If the g_compensation checkbox ist active (default: active), the AndroidLinearAccelerometer fct. is called,
+        otherwise the AndroidAccelerometer fct. is called. After presssing start calibration, the 10 sec calibration
+        starts after a delay of 2 sec. The label text also changes dynamically."""
         self.gyroscope = AndroidGyroscope()
         if self.manager.screens[5].ids["g_compensation_calibration"].active:
             self.linear = True
@@ -491,9 +530,12 @@ class CalibrationScreen(Screen):
         self.accelerometer.enable()
 
     def start_calibration(self, t):
+        """default samplingrate of calibration"""
         Clock.schedule_interval(self.start_measurement, 1 / 20)
 
     def start_measurement(self, t):
+        """start the calibration
+        record the measured values of gyroscop and linear Accelerometer"""
         gyro = self.gyroscope.get_rotation()
         lin = self.accelerometer.get_acceleration()
 
@@ -506,6 +548,11 @@ class CalibrationScreen(Screen):
             self.z_rotation.append(gyro[2])
 
     def stop_calibration(self, t):
+        """if the the calibration Counter = 0, stop recording values and unschedule the display countdown
+        Without g Compensation, substract 9.81 in z direction
+        Safe the calibrated values in the right folder (create them at the first start of the app)
+        return back to the menu
+        """
         Clock.unschedule(self.disp_time)
         Clock.unschedule(self.start_measurement)
         x_acc_off = sum(self.x_acceleration) / len(self.x_acceleration)
@@ -517,14 +564,9 @@ class CalibrationScreen(Screen):
 
         if not self.linear:
             z_acc_off -= 9.81
-        try:
-            Environment = autoclass("android.os.Environment")
-            self.sdpath = Environment.getExternalStorageDirectory().getAbsolutePath()
-        except:
-            self.sdpath = MDApp.get_running_app().user_data_dir
-        if not os.path.exists(os.path.join(self.sdpath, "Acc360Track/Calibration")):
-            os.mkdir(os.path.join(self.sdpath, "Acc360Track/Calibration"))
-        self.sdpath += "/Acc360Track/Calibration/"
+        if not os.path.exists(os.path.join(sdpath, "Acc360Track/Calibration")):
+            os.mkdir(os.path.join(sdpath, "Acc360Track/Calibration"))
+        self.sdpath = sdpath + "/Acc360Track/Calibration/"
         if self.linear:
             f = open(self.sdpath + "Offset_gCompensation.csv", "w+")
         else:
@@ -540,10 +582,12 @@ class CalibrationScreen(Screen):
             "calibration_text"].text = "Place your device on a flat surface and press the Start-button to begin with the calibration!"
 
     def disp_time(self, t):
+        """Countdown for Calibration Mode"""
         self.manager.screens[5].ids["calibration_button"].text = str(self.time)
         self.time -= 1
 
     def onBackBtn(self, window, keycode1, *largs):
+        """back key on smartphone, reserved with "ESC", we use it as a back key"""
         if keycode1 == 27:
             self.manager.direction = "right"
             self.manager.current = "menu"
@@ -568,6 +612,7 @@ class Screenmanagement(ScreenManager):
 
 
 class AccTrack(MDApp):
+    """Builds the App, returns the root widget Screenmanagment with the different screens"""
     def build(self):
         return Screenmanagement()
 

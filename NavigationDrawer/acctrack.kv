@@ -72,6 +72,7 @@
                 IconLeftWidget:
                     icon: 'help-circle-outline'
 
+
     Image:
         source: 'HE_Logo.png'
         pos_hint: {'center_x':0.5, 'center_y':0.5}
@@ -554,27 +555,30 @@
 <HelpScreen>:
     name: 'help'
 
-    BoxLayout:
+    FloatLayout:
         orientation: 'vertical'
         MDToolbar:
+            pos_hint: {"top": 1}
             title: '360° ACC Track'
             left_action_items: [["menu", lambda x: nav_drawer.toggle_nav_drawer()]]
             elevation:10
-        BoxLayout:
-            orientation: "horizontal"
-            size_hint: (1, 0.3)
-            Image:
-                source: 'axis_device.png'
-                pos_hint: {'center_x':0.25, 'center_y':0.4}
-                allow_stretch: True
+        Image:
+            source: 'axis_device.png'
+            pos_hint: {'center_x':0.23, 'center_y':0.78}
+            size_hint: (0.4, 0.25)
+            allow_stretch: True
+        MDLabel:
+            markup: True
+            pos_hint: {'center_x':0.75, 'center_y':0.78}
+            size_hint: (0.5, 0.3)
+            text: "[b]Device coordinate system: [/b]\n\nWhen a device is held in its default orientation: \n - The X-axis is horizontal and points to the right \n - The Y-axis is vertical and points up \n - The Z-axis is perpendicular to the face of the sceen"
+        ScrollView:
+            pos_hint: {"top": 0.6}
+            size_hint: (1, 0.53)
             MDLabel:
                 markup: True
-                pos_hint: {'center_x':0.75, 'center_y':0.4}
-                text: "[b]Device coordinate system: [/b]\n\nWhen a device is held in its default orientation: \n - The X-axis is horizontal and points to the right \n - The Y-axis is vertical and points up \n - The Z-axis is perpendicular to the face of the sceen"
-        ScrollView:            
-            MDLabel:
                 padding_x: 20
-                text: '\nOPERATION MANUAL:\n\nTo get to the navigation bar, press the three stripes in the upper left corner. To get to the home screen, press the HOME-button in the lower left corner. Both buttons are available in every part of this application.\n\nBefore starting, go to the ‘Calibration’ page and calibrate your device. Make sure to place your device on a flat surface. Avoid any contact with the device and make sure the device doesn´t move until the process is finished\n\nTo start a measurement, go to the ‘Start tracking’ page and press the ‘START’-button. During the measurement, the angular velocity and the linear acceleration of the X-, Y- and Z- Axis should be visible on your display.\nTo finish the tracking, press the ‘STOP’-button. Now the whole track of your movement should appear on the display.\nMake sure to save the track by pressing the ‘SAVE’-button before starting a new measurement, otherwise it will be overwritten.\nTo add the g compensation to your tracking, activate the checkbox in the lower right corner before starting the measurement.\nTo activate a starting delay or to set a duration of your measurement, go to the ‘Settings’ page. Activate the switch of the option you want to choose and set a starting value or/and the duration value\n\nTo view your previously measured tracks, go to the ‘Show logged data’ page. By choosing a measurement and pressing the ‘Restore Track’-button, your chosen track will be displayed. To go back, press the return-button of your device.\n\nOn the ‘Settings’ page you can activate, deactivate, or change settings like the sampling rate and the offsets of acceleration or gyration. You can reach the ‘Settings’ page from the navigation bar, the home screen, or directly from the ‘Start tracking’ page.\nTo change the sampling rate, press on the text field and the preferred value in Hertz.\nTo activate an acceleration Offset or a gyration Offset, turn on the related switch and type in the chosen values.'
+                text: '[b][u]OPERATION MANUAL[/u][/b]:\n\nTo get to the navigation bar, press the three stripes in the upper left corner. To get to the home screen, press the HOME-button in the lower left corner. Both buttons are available in every part of this application.\n\nBefore starting, go to the ‘Calibration’ page and calibrate your device. Make sure to place your device on a flat surface. Avoid any contact with the device and make sure the device doesn´t move until the process is finished\n\nTo start a measurement, go to the ‘Start tracking’ page and press the ‘START’-button. During the measurement, the angular velocity and the linear acceleration of the X-, Y- and Z- Axis should be visible on your display.\nTo finish the tracking, press the ‘STOP’-button. Now the whole track of your movement should appear on the display.\nMake sure to save the track by pressing the ‘SAVE’-button before starting a new measurement, otherwise it will be overwritten.\nTo add the g compensation to your tracking, activate the checkbox in the lower right corner before starting the measurement.\nTo activate a starting delay or to set a duration of your measurement, go to the ‘Settings’ page. Activate the switch of the option you want to choose and set a starting value or/and the duration value\n\nTo view your previously measured tracks, go to the ‘Show logged data’ page. By choosing a measurement and pressing the ‘Restore Track’-button, your chosen track will be displayed. To go back, press the return-button of your device.\n\nOn the ‘Settings’ page you can activate, deactivate, or change settings like the sampling rate and the offsets of acceleration or gyration. You can reach the ‘Settings’ page from the navigation bar, the home screen, or directly from the ‘Start tracking’ page.\nTo change the sampling rate, press on the text field and the preferred value in Hertz.\nTo activate an acceleration Offset or a gyration Offset, turn on the related switch and type in the chosen values.'
                 text_color: "Custom"
                 
                 size_hint_y: None

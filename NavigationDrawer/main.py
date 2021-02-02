@@ -34,6 +34,20 @@ class MeasureScreen(Screen):
         self.disp_plot = False
         self.started_measurement = False
         request_permissions([Permission.WRITE_EXTERNAL_STORAGE, Permission.READ_EXTERNAL_STORAGE])
+        global sdpath
+        try:
+            Environment = autoclass("android.os.Environment")
+            sdpath = Environment.getExternalStorageDirectory().getAbsolutePath()
+        except:
+            sdpath = MDApp.get_running_app().user_data_dir
+        if not os.path.exists(os.path.join(sdpath, "Acc360Track/Data")):
+            os.mkdir(os.path.join(sdpath, "Acc360Track/Data"))
+        if not os.path.exists(os.path.join(sdpath, "Acc360Track/Data/without_g_compensation")):
+            os.mkdir(os.path.join(sdpath, "Acc360Track/Data/without_g_compensation"))
+        if not os.path.exists(os.path.join(sdpath, "Acc360Track/Data/with_g_compensation")):
+            os.mkdir(os.path.join(sdpath, "Acc360Track/Data/with_g_compensation"))
+        self.compensated_path = sdpath + "/Acc360Track/Data/with_g_compensation/"
+        self.sdpath = sdpath + "/Acc360Track/Data/without_g_compensation/"
 
     def init(self, t):
         """The actual init function for this screen. Both graph plots are instantiated from the corresponding ids in the
@@ -51,20 +65,6 @@ class MeasureScreen(Screen):
         self.rot_plot.append(LinePlot(color=[0, 1, 0, 1], line_width=3))  # X - Green
         self.rot_plot.append(LinePlot(color=[0, 0, 1, 1], line_width=3))  # Y - Blue
         self.rot_plot.append(LinePlot(color=[1, 0, 0, 1], line_width=3))  # Z - Red
-        global sdpath
-        try:
-            Environment = autoclass("android.os.Environment")
-            sdpath = Environment.getExternalStorageDirectory().getAbsolutePath()
-        except:
-            sdpath = MDApp.get_running_app().user_data_dir
-        if not os.path.exists(os.path.join(sdpath, "Acc360Track/Data")):
-            os.mkdir(os.path.join(sdpath, "Acc360Track/Data"))
-        if not os.path.exists(os.path.join(sdpath, "Acc360Track/Data/without_g_compensation")):
-            os.mkdir(os.path.join(sdpath, "Acc360Track/Data/without_g_compensation"))
-        if not os.path.exists(os.path.join(sdpath, "Acc360Track/Data/with_g_compensation")):
-            os.mkdir(os.path.join(sdpath, "Acc360Track/Data/with_g_compensation"))
-        self.compensated_path = sdpath + "/Acc360Track/Data/with_g_compensation/"
-        self.sdpath = sdpath + "/Acc360Track/Data/without_g_compensation/"
 
         self.reset_plots()
         for plot in self.acc_plot:
@@ -80,6 +80,7 @@ class MeasureScreen(Screen):
             plot.points = [(0, 0)]
         for plot in self.rot_plot:
             plot.points = [(0, 0)]
+        self.counter = 1
 
     def init_measurement(self):
         """"function called at start of each measurement. If the user has specified some offset values on the SettingScreen

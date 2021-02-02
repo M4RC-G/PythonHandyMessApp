@@ -7,7 +7,7 @@ title = AccTrack360°
 package.name = AccTrack
 
 # (str) Package domain (needed for android/ios packaging)
-package.domain = org.test
+package.domain = org.acctrack
 
 # (str) Source code where the main.py live
 source.dir = .
@@ -49,7 +49,7 @@ requirements = python3==3.7.5,hostpython3==3.7.5,kivy==2.0.0,pyjnius,android,kiv
 presplash.filename = AccTrack.jpeg
 
 # (str) Icon of the application
-icon.filename = AccTrackIcon.jpeg
+icon.filename = AccTrackIcon.png
 
 # (str) Supported orientation (one of landscape, sensorLandscape, portrait or all)
 orientation = portrait
@@ -91,7 +91,7 @@ android.permissions = INTERNET
 #android.api = 21
 
 # (int) Minimum API your APK will support.
-#android.minapi = 21
+android.minapi = 21
 
 # (int) Android SDK version to use
 #android.sdk = 20
